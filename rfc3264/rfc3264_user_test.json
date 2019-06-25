@@ -1,0 +1,488 @@
+{
+  "TestName": "rfc3264_user_test",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 0,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 11001,
+      "RtpPort": 20000,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    },
+    {
+      "UserId": 1,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 11002,
+      "RtpPort": 20010,
+      "SipGroup": "sip.ab",
+      "QParam": 1
+    }
+  ],
+  "UserVar": [
+    {}
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/ss/enable %%0.Number%% ml",
+    "/domain/%%DEV_DOM%%/ss/enable %%1.Number%% ml",
+    "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% ml line_count=5",
+    "/domain/%%DEV_DOM%%/ss/activate %%1.Number%% ml line_count=5"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% ml",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%1.Number%% ml",
+    "/domain/%%DEV_DOM%%/ss/disable %%0.Number%% ml",
+    "/domain/%%DEV_DOM%%/ss/disable %%1.Number%% ml"
+  ],
+  "Tests": [
+    {
+      "Name": "check_oa_exchange_with_simcap_rfc3407",
+      "Description": "Проверка согласования медии при наличии sdp-атрибутов из rfc3407",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAS_SEND_BYE_RFC3407_SDP",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uas_send_bye_with_sdp_rfc3407.xml",
+                  "Options": "-m 1 -d 5000",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAC_RECV_BYE_RFC3407_SDP",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uac_recv_bye_with_sdp_rfc3407.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "Check_oa_exchange_2_video_codecs",
+      "Description": "Проверка корректности o/a при передаче 2 видео кодеков в a_sdp",
+      "RepeatCounter": 10,
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAS_SEND_2_VIDEO_CODECS",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uas_send_2_video_codecs.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAC_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -d 2000 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "replace_media_section",
+      "Description": "Проверка замены медиа-секции с audio на image и обратно. А звонит Б. На стороне Б получаем osdp c audio, в asdp подтверждаем использования аудио кодека. Далее со стороны Б отправляем re-invite, в котором заменяем audio секцию на image. Ожидается, что в asdp ссв подтвердит использование image. Далее отправляем новый re-invite, в котором заменяем image на audio. Ожидается, что ссв подтвердит использование audio кодека.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAS_REPLACE_MEDIA_SECTION",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uas_replace_fax_section.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uac_recv_t38_re_invite.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "return_to_audio_if_image_offer_rejected",
+      "Description": "Проверка возврата в audio для случая, когда сторона Б не поддерживает T38. Абонент А и Б разговаривают. Со стороны А отправляем osdp, в котором предлагаем T38. Ожидается, что ссв отправит osdp с T38 на сторону Б. Сторона Б отправляет 488 ответ на данный osdp. Ожидается, что ссв отправит osdp в сторону А с предложением перейти обратно в audio кодек.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAS_REJECT_T38_OFFER",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uas_send_488_on_t38.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAC_SEND_T38_OFFER",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uac_recv_re_inv_with_media_after_t38.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "send_image_section_with_inactive_attribute",
+      "Description": "Проверка обработки атрибута inactive в секции image. Абонент А и Б разговаривают. Абонент Б отправляет osdp c T38. Ожидается, что ссв отправит osdp c T38 на сторону А. Абонент А, получив данный osdp, подтверждает использование T38, но при этом передаёт атрибут inactive. Ожидается, что ссв просто переведёт состояние медиа в inactive. Далее абонент А шлёт osdp, в котором содержится 2 медиа секции: audio и image. Ожидается, что ссв пришлёт asdp с T38.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAS_SEND_T38_RE_INV",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uas_send_t38_offer.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAC_INACTIVE_IMAGE_SECTION",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uac_send_inactive_image_in_answer.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "refresh_inactive_t38_to_audio",
+      "Description": "Проверка обновления медиа-канала с неактивного T38, на аудио. А и Б разговаривают. Абонент Б отправляет osdp c T38. Ожидается, что ссв отправит osdp c T38 на сторону А. Абонент А, получив данный osdp, подтверждает использование T38, но при этом передаёт атрибут inactive. Ожидается, что ссв просто переведёт состояние медиа в inactive. Далее абонент А шлёт osdp, в котором предлагает перейти на audio. Ожидается, что ссв пришлёт asdp с audio.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAS_SEND_T38_OFFER",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uas_t38_recv_re_inv_to_media.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAC_REFRESH_INACTIVE_T38_TO_AUDIO",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uac_refresh_inactive_image_to_audio.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "send_initial_osdp_which_contains_only_t38(b_side_support_t38)",
+      "Description": "Проверка корректности обработки initial osdp с T38 для случая, когда сторона Б поддерживает данный кодек. Абонент А звонит абоненту Б, отправляя в osdp только секцию image с T38. Ожидается, что ссв сначала пришлёт стандартный osdp, а после ответа пришлёт RE-INVITE с T38. Далее сторона Б отправляет asdp c T38 и вызов завершается.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAS_RECV_INITIAL_T38_OFFER",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uas_recv_t38_offer.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAC_SEND_INITIAL_T38_OFFER",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uac_send_t38_offer.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "send_initial_osdp_which_contains_only_t38(b_side_support_only_g711)",
+      "Description": "Проверка корректности обработки initial osdp с T38 для случая, когда сторона Б поддерживает только audio кодеки. Абонент А звонит абоненту Б, отправляя в osdp только секцию image с T38. Ожидается, что ссв сначала пришлёт стандартный osdp, а после ответа пришлёт RE-INVITE с T38. Абонент Б отклоняет данный RE-INVITE 488 ответом. Ожидается, что ссв пришлёт новый RE-INVITE со стандартным osdp, который содержит audio кодеки. Далее сторона Б отправляет asdp с audio и вызов завершается.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAS_RECV_INITIAL_T38_OFFER",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uas_send_488_on_t38.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAC_SEND_INITIAL_T38_OFFER",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uac_send_t38_o_and_recv_re_invite.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "send_initial_osdp_which_contains_only_t38(b_side_doesn't_support_anything)",
+      "Description": "Проверка корректности обработки initial osdp с T38 для случая, когда сторона Б не согласовывает ни image, ни audio (тест синтетический, в реальности такой кейс может произойти только с кривым оборудованием). Абонент А звонит абоненту Б, отправляя в osdp только секцию image с T38. Ожидается, что ссв сначала пришлёт стандартный osdp, а после ответа пришлёт RE-INVITE с T38. Абонент Б отклоняет данный RE-INVITE 488 ответом. Ожидается, что ссв пришлёт новый RE-INVITE со стандартным osdp, который содержит audio кодеки. Абонент Б также отклоняет и этот RE-INVITE. Ожидается, что ссв завершит вызов, так как не удалось иницировать медиа-канал.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAS_RECV_INITIAL_T38_OFFER",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uas_send_488_on_t38.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAC_SEND_INITIAL_T38_OFFER",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uac_send_t38_o_and_recv_re_invite.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "send_re_invite_wout_sdp",
+      "Description": "Проверка корректности обработки re-invite без sdp. A и Б разговаривают. Отправляем с обоих сторон RE-INVITE без osdp. Ожидается, что ссв пришлёт osdp в 200 ответе. После получения osdp в 200, тест отправляет asdp в ACK.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAS_SEND_RE_INVITE_WOUT_SDP",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uas_send_re_invite_wout_offer.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAC_SEND_INITIAL_INVITE_WOUT_OFFER",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uac_send_invite_wout_offer.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_sdp_with_dynamic_payload",
+      "Description": "Проверка обработки osdp c несколькими кодеками с динамическим payload. Отправляем osdp c несколькими кодеки, некоторые из них используют динамический pt. Также для каждого из кодеков указываем частоту дискретизации в rtpmap. Ожидается, что ссв сформирует корректный asdp.",
+      "Ref": "Bug #111820",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAS_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -d 2000",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAC_SEND_DYNAMIC_PT",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3264/uac_send_dynamic_pt.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

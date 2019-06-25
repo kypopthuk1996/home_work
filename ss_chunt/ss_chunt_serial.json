@@ -1,0 +1,990 @@
+{
+  "TestName": "ss_chunt_serial",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 0,
+      "Number": "156",
+      "Login": "156",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10100,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    },
+    {
+      "UserId": 1,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10106,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    },
+    {
+      "UserId": 2,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10107,
+      "SipGroup": "sip.ab",
+      "QParam": 1
+    },
+    {
+      "UserId": 3,
+      "Number": "159",
+      "Login": "159",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10108,
+      "SipGroup": "sip.ab",
+      "QParam": 1
+    },
+    {
+      "UserId": 4,
+      "Number": "155",
+      "Login": "155",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10109,
+      "QParam": 1
+    }
+  ],
+  "UserVar": [
+    {
+      "%%ChuntUser%%": "%%0.Number%%",
+      "%%ChuntSipDomain%%": "%%0.SipDomain%%",
+      "%%ChuntSipGroup%%": "%%0.SipGroup%%",
+      "%%ChuntGroup%%": "[%%1.Number%%,%%2.Number%%,%%3.Number%%]"
+    }
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/ss/enable %%4.Number%% ml",
+    "/domain/%%DEV_DOM%%/ss/activate %%4.Number%% ml line_count = 4",
+    "/domain/%%DEV_DOM%%/ss/enable %%ChuntUser%% chunt",
+    "/domain/%%DEV_DOM%%/ss/activate %%ChuntUser%% chunt mode = serial, numbers = %%ChuntGroup%%,reset_window_start_pos_after_call=true, queue_size = 3, window_shift_timeout = 3, cyclic = false, max_shift_count = 2, search_strategy = first, queue_strategy = drop"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/ss/deactivate %%4.Number%% ml",
+    "/domain/%%DEV_DOM%%/ss/disable %%4.Number%% ml",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%ChuntUser%% chunt",
+    "/domain/%%DEV_DOM%%/ss/disable %%ChuntUser%% chunt"
+  ],
+  "Tests": [
+    {
+      "Name": "chunt_basic_test_wout_100_rel",
+      "Description": "Запускаем один вызов в группу. На одном из UAS отвечаем, остальным CANCEL",
+      "TestProcedure": [
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%ChuntUser%% -set CDPNDOM %%ChuntSipDomain%% -d 2000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "chunt_basic_test_with_100_rel",
+      "Description": "Запускаем один вызов в группу. На одном из UAS отвечаем, остальным CANCEL",
+      "TestProcedure": [
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%ChuntUser%% -set CDPNDOM %%ChuntSipDomain%% -d 2000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "chunt_wst_eq_0_wout_100_rel",
+      "Description": "Проверка данного кейса: Если WINDOW_SHIFT_TIMEOUT равен 0, то переход на следующего абонента группы произойдет, если текущий абонент занят.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%ChuntUser%% chunt mode = serial, numbers = %%ChuntGroup%%,reset_window_start_pos_after_call=true, queue_size = 3, window_shift_timeout = 0, cyclic = false, max_shift_count = 2, search_strategy = first, queue_strategy = drop"
+          ]
+        },
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "ss_chunt/uas_send_486.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "ss_chunt/uas_send_486.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%ChuntUser%% -set CDPNDOM %%ChuntSipDomain%% -d 2000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "chunt_wst_eq_0_with_100_rel",
+      "Description": "Проверка данного кейса: Если WINDOW_SHIFT_TIMEOUT равен 0, то переход на следующего абонента группы произойдет, если текущий абонент занят.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%ChuntUser%% chunt mode = serial, numbers = %%ChuntGroup%%,reset_window_start_pos_after_call=true, queue_size = 3, window_shift_timeout = 0, cyclic = false, max_shift_count = 2, search_strategy = first, queue_strategy = drop"
+          ]
+        },
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "ss_chunt/req100rel/uas_send_486.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "ss_chunt/req100rel/uas_send_486.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%ChuntUser%% -set CDPNDOM %%ChuntSipDomain%% -d 2000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "chunt_queue_overload_wout_100_rel",
+      "Description": "Запускаем N+1 вызовов, где N - длина очереди. На всех UAS отвечаем, N+1 вызов отбит ",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%ChuntUser%% chunt mode = serial, numbers = %%ChuntGroup%%,reset_window_start_pos_after_call=true, queue_size = 3, window_shift_timeout = 3, cyclic = false, max_shift_count = 2, search_strategy = first, queue_strategy = drop"
+          ]
+        },
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "ss_chunt/uac_with_optional_486.xml",
+                  "Options": "-m 4 -set CDPN %%ChuntUser%% -set CDPNDOM %%ChuntSipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "chunt_queue_overload_with_100_rel",
+      "Description": "Запускаем N+1 вызовов, где N - длина очереди. На всех UAS отвечаем, N+1 вызов отбит ",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%ChuntUser%% Chunt",
+            "/domain/%%DEV_DOM%%/ss/activate %%ChuntUser%% chunt mode = serial, numbers = %%ChuntGroup%%,reset_window_start_pos_after_call=true, queue_size = 3, window_shift_timeout = 3, cyclic = false, max_shift_count = 2, search_strategy = first, queue_strategy = drop"
+          ]
+        },
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "ss_chunt/req100rel/uac_with_optional_486.xml",
+                  "Options": "-m 4 -set CDPN %%ChuntUser%% -set CDPNDOM %%ChuntSipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "chunt_drop_on_busy_wout_100rel",
+      "Description": "Запускаем 1 вызов в очередь. На всех UAS (кроме последнего) отбиваем вызовы 486, на последнем отвечаем и кладём трубку ",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%ChuntUser%% Chunt",
+            "/domain/%%DEV_DOM%%/ss/activate %%ChuntUser%% chunt mode = serial, numbers = %%ChuntGroup%%,reset_window_start_pos_after_call=true, queue_size = 3, window_shift_timeout = 3, cyclic = false, max_shift_count = 2, search_strategy = first, queue_strategy = drop"
+          ]
+        },
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "ss_chunt/uas_send_486.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "ss_chunt/uas_send_486.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%ChuntUser%% -set CDPNDOM %%ChuntSipDomain%% -d 2000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "chunt_drop_on_busy_with_100_rel",
+      "Description": "Запускаем 1 вызов в очередь. На всех UAS (кроме последнего) отбиваем вызовы 486, на последнем отвечаем и кладём трубку ",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%ChuntUser%% Chunt",
+            "/domain/%%DEV_DOM%%/ss/activate %%ChuntUser%% chunt mode = serial, numbers = %%ChuntGroup%%,reset_window_start_pos_after_call=true, queue_size = 3, window_shift_timeout = 3, cyclic = false, max_shift_count = 2, search_strategy = first, queue_strategy = drop"
+          ]
+        },
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "ss_chunt/req100rel/uas_send_486.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "ss_chunt/req100rel/uas_send_486.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%ChuntUser%% -set CDPNDOM %%ChuntSipDomain%% -d 2000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "chunt_cyclic_test_wout_100rel",
+      "Description": "Проверка Cyclic. Засчёт включенного cyclic протаскиваем вызов по всей очереди 2 раза. На последнем UAS отвечаем",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%ChuntUser%% Chunt",
+            "/domain/%%DEV_DOM%%/ss/activate %%ChuntUser%% chunt mode = serial, numbers = %%ChuntGroup%%,reset_window_start_pos_after_call=true, queue_size = 3, window_shift_timeout = 3, cyclic = true, max_shift_count = 5, search_strategy = first, queue_strategy = drop"
+          ]
+        },
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 2",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 2",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_CHUNT_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                },
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%ChuntUser%% -set CDPNDOM %%ChuntSipDomain%% -d 2000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "chunt_cyclic_test_with_100rel",
+      "Description": "Проверка Cyclic. Засчёт включенного cyclic протаскиваем вызов по всей очереди 2 раза. На последнем UAS отвечаем",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%ChuntUser%% Chunt",
+            "/domain/%%DEV_DOM%%/ss/activate %%ChuntUser%% chunt mode = serial, numbers = %%ChuntGroup%%,reset_window_start_pos_after_call=true, queue_size = 3, window_shift_timeout = 3, cyclic = true, max_shift_count = 5, search_strategy = first, queue_strategy = drop"
+          ]
+        },
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_cancel.xml",
+                  "Options": "-m 2",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_cancel.xml",
+                  "Options": "-m 2",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_CHUNT_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                },
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%ChuntUser%% -set CDPNDOM %%ChuntSipDomain%% -d 2000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "cancel_call_from_a_side",
+      "Description": "Проверка отбоя группового вызова со стороны абонента А посредством запроса CANCEL. A звонит на групповой номер из трёх абонентов, вызов распределяется на первого абонента группы, он не отвечает. Ожидается, что по истечению window_shift_timeout плечо Б будет отбито посредством CANCEL с Reason: SIP;cause=200, а вызов распределится на следующего абонента. Второй абонент также не отвечает на вызов и получает CANCEL c Reason: SIP;cause=200. Далее вызов распределяется на третьего абонента группы, он не отвечает на него, в этот момент абонент А отправляет CANCEL. Ожидается, что третьему абоненту будет отпрален CANCEL без Reason: SIP;cause=200.",
+      "TestProcedure": [
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_SEND_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_cancel.xml",
+                  "Options": "-m 1 -set CDPN %%ChuntUser%% -set CDPNDOM %%ChuntSipDomain%% -d 10000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "cancel_call_by_no_answer_timer",
+      "Description": "Проверка отбоя группового вызова по таймеру неответа. Устанавливаем таймер неответа на групповой номер. A звонит на групповой номер из трёх абонентов, вызов распределяется на первого абонента группы, он не отвечает. Ожидается, что по истечению window_shift_timeout плечо Б будет отбито посредством CANCEL с Reason: SIP;cause=200, а вызов распределится на следующего абонента. Второй абонент также не отвечает на вызов и получает CANCEL c Reason: SIP;cause=200. Далее вызов распределяется на третьего абонента группы, он не отвечает на него, срабатывает таймер no_answer_timeout. Ожидается, что третьему абоненту будет отпрален CANCEL без Reason: SIP;cause=200, а абоненту А будет отпрален 480 ответ.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/alias/set %%ChuntUser%% %%ChuntSipGroup%% %%ChuntUser%%@%%ChuntSipDomain%% no_answer_timeout 10s"
+          ]
+        },
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_RECV_480",
+              "Commands": [
+                {
+                  "SourceFile": "ss_chunt/uac_recv_480.xml",
+                  "Options": "-m 1 -set CDPN %%ChuntUser%% -set CDPNDOM %%ChuntSipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/alias/clean %%ChuntUser%% %%ChuntSipGroup%% %%ChuntUser%%@%%ChuntSipDomain%% no_answer_timeout"
+          ]
+        }
+      ]
+    }
+  ]
+}

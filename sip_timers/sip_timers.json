@@ -1,0 +1,599 @@
+{
+  "TestName": "sip_timer_test",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 1,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 12106,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    },
+    {
+      "UserId": 2,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 12107,
+      "SipGroup": "sip.ab",
+      "QParam": 1
+    },
+    {
+      "UserId": 3,
+      "Number": "159",
+      "Login": "159",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 12108,
+      "SipGroup": "sip.ab",
+      "QParam": 1
+    },
+    {
+      "UserId": 4,
+      "Number": "155",
+      "Login": "155",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 12109,
+      "QParam": 1
+    }
+  ],
+  "UserVar": [
+    {}
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/lists/declare sub_timer_test presence sub_timer_test %%1.Number%% %%2.Number%%",
+    "/domain/%%DEV_DOM%%/ss/enable %%1.Number%% presence",
+    "/domain/%%DEV_DOM%%/ss/activate %%1.Number%% presence max_subscribe = 1"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/lists/remove sub_timer_test",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%1.Number%% presence",
+    "/domain/%%DEV_DOM%%/ss/disable %%1.Number%% presence"
+  ],
+  "Tests": [
+    {
+      "Name": "test_invite_retransmission",
+      "Description": "Проверка таймеров перепосылки INVITE запроса. А звонит на Б, Б не отвечает на INVITE. По истечению 64T1 на стороне Б проверяем таймера A и B для запроса INVITE.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS_INVITE_RETRANSMISSION",
+              "Commands": [
+                {
+                  "SourceFile": "sip_timers/uas_no_response_to_invite.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "45s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "sip_timers/uac_handle_error_responses.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "120s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "CheckRetransmission": [
+            {
+              "Timer": "A",
+              "UA": "user:1",
+              "Calls": [
+                1
+              ],
+              "Msg": {
+                "MsgType": "request",
+                "Method": "INVITE",
+                "Code": null
+              }
+            },
+            {
+              "Timer": "B",
+              "UA": "user:1",
+              "Msg": {
+                "MsgType": "request",
+                "Method": "INVITE",
+                "Code": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_prack_retransmission",
+      "Description": "Проверка таймеров перепосылки PRACK запроса. А звонит на Б, Б даёт 180 с Require: 100rel и не отвечает на PRACK запрос. По истечению 64T1 на стороне Б проверяем таймера E и F для запроса PRACK.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS_PRACK_RETRANSMISSION",
+              "Commands": [
+                {
+                  "SourceFile": "sip_timers/uas_no_response_to_prack.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "45s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "sip_timers/uac_handle_error_responses.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "120s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "CheckRetransmission": [
+            {
+              "Timer": "E",
+              "UA": "user:1",
+              "Msg": {
+                "MsgType": "request",
+                "Method": "PRACK",
+                "Code": null
+              }
+            },
+            {
+              "Timer": "F",
+              "UA": "user:1",
+              "Msg": {
+                "MsgType": "request",
+                "Method": "PRACK",
+                "Code": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_cancel_retransmission",
+      "Description": "Проверка таймеров перепосылки CANCEL запроса. А звонит на Б, Б даёт 180, A шлёт CANCEL, Б получает CANCEL и не подтверждает его 200 ответом. По истечению 64T1 на стороне Б проверяем таймера E и F для запроса CANCEL.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS_CANCEL_RETRANSMISSION",
+              "Commands": [
+                {
+                  "SourceFile": "sip_timers/uas_no_response_to_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "45s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "Name": "UAC_SEND_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_cancel.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "120s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "CheckRetransmission": [
+            {
+              "Timer": "E",
+              "UA": "user:1",
+              "Msg": {
+                "MsgType": "request",
+                "Method": "CANCEL",
+                "Code": null
+              }
+            },
+            {
+              "Timer": "F",
+              "UA": "user:1",
+              "Msg": {
+                "MsgType": "request",
+                "Method": "CANCEL",
+                "Code": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_bye_retransmission",
+      "Description": "Проверка таймеров перепосылки BYE запроса. А звонит на Б, Б отвечает, А отправляет BYE, Б получает BYE и не подтверждает его 200 ответом. По истечению 64T1 на стороне Б проверяем таймера E и F для запроса BYE.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS_BYE_RETRANSMISSION",
+              "Commands": [
+                {
+                  "SourceFile": "sip_timers/uas_no_response_to_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "120s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "120s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "CheckRetransmission": [
+            {
+              "Timer": "E",
+              "UA": "user:1",
+              "Msg": {
+                "MsgType": "request",
+                "Method": "BYE",
+                "Code": null
+              }
+            },
+            {
+              "Timer": "F",
+              "UA": "user:1",
+              "Msg": {
+                "MsgType": "request",
+                "Method": "BYE",
+                "Code": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_notify_retransmission",
+      "Description": "Проверка таймеров перепосылки NOTIFY запроса. A подписывается на Б, Б шлёт PUBLISH, A получает NOTIFY и не подтверждает его 200 ответом. По истечению 64T1 на стороне A проверяем таймера E и F для запроса NOTIFY.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "CREATE_PRESENCE_SUB",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_set_subscription.xml",
+                  "NeedAuth": true,
+                  "CidStr": "subfrom%%1.Number%%to%%2.Number%%",
+                  "StartCseq": 3,
+                  "Options": "-m 1 -set EXP 90 -set EVENT presence -set CDPN %%2.Number%% -set CDPNDOM %%2.SipDomain%%",
+                  "SippType": "uac",
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "BackGround": true,
+              "WriteStat": true,
+              "Name": "UAS_NO_RESPONSE_TO_NOTIFY",
+              "Commands": [
+                {
+                  "SourceFile": "sip_timers/uas_no_response_to_notify.xml",
+                  "Options": "-m 1 -d 35000",
+                  "SippType": "uas",
+                  "Timeout": "50s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 2,
+              "Name": "UAC_SEND_PUBLISH",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_publish.xml",
+                  "NeedAuth": true,
+                  "Options": "-m 1 -set CDPN %%2.Number%% -set CDPNDOM %%2.SipDomain%%",
+                  "SippType": "uac",
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "WaitBackGroundUA": {
+            "timeout": 40
+          }
+        },
+        {
+          "CheckRetransmission": [
+            {
+              "Timer": "E",
+              "UA": "user:1",
+              "Msg": {
+                "MsgType": "request",
+                "Method": "NOTIFY",
+                "Code": null
+              }
+            },
+            {
+              "Timer": "F",
+              "UA": "user:1",
+              "Msg": {
+                "MsgType": "request",
+                "Method": "NOTIFY",
+                "Code": null
+              }
+            }
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "DROP_PRESENCE_SUB",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_set_subscription.xml",
+                  "CidStr": "subfrom%%1.Number%%to%%2.Number%%",
+                  "StartCseq": 3,
+                  "NeedAuth": true,
+                  "Options": "-m 1 -set EXP 0 -set EVENT presence -set CDPN %%2.Number%% -set CDPNDOM %%2.SipDomain%%",
+                  "SippType": "uac",
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_200_response_retransmissions",
+      "Description": "Проверка таймеров перепосылки 200 ответа на INVITE. А звонит на Б, А ожидает 200 ответ на INVITE и не подтверждает его посредством ACK. По истечению 64T1 на стороне A проверяем таймера G и H для 200 ответа на INVITE.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_RECV_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "45s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAC_200_RETRANSMISSION",
+              "Commands": [
+                {
+                  "SourceFile": "sip_timers/uac_no_ack_to_200.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "120s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "CheckRetransmission": [
+            {
+              "Timer": "G",
+              "UA": "user:2",
+              "Msg": {
+                "MsgType": "response",
+                "Method": "INVITE",
+                "Code": 200
+              }
+            },
+            {
+              "Timer": "H",
+              "UA": "user:2",
+              "Msg": {
+                "MsgType": "response",
+                "Method": "INVITE",
+                "Code": 200
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_4xx_response_retransmissions",
+      "Description": "Проверка таймеров перепосылки 4XX ответа на INVITE. А звонит на Б, Б даёт 486 busy, A получает 486 и не подтверждает его посредством ACK. По истечению 64T1 на стороне A проверяем таймера G и H для 486 ответа на INVITE.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_SEND_486",
+              "Commands": [
+                {
+                  "SourceFile": "sip_timers/uas_send_486.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "120s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAC_486_RETRANSMISSION",
+              "Commands": [
+                {
+                  "SourceFile": "sip_timers/uac_ignore_error_responses.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%% -d 32000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "120s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "CheckRetransmission": [
+            {
+              "Timer": "G",
+              "UA": "user:2",
+              "Msg": {
+                "MsgType": "response",
+                "Method": "INVITE",
+                "Code": 486
+              }
+            },
+            {
+              "Timer": "H",
+              "UA": "user:2",
+              "Msg": {
+                "MsgType": "response",
+                "Method": "INVITE",
+                "Code": 486
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_5xx_response_retransmissions",
+      "Description": "Проверка таймеров перепосылки 5XX ответа на INVITE. А звонит на Б, Б даёт 500 busy, A получает 500 и не подтверждает его посредством ACK. По истечению 64T1 на стороне A проверяем таймера G и H для 500 ответа на INVITE.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_SEND_500",
+              "Commands": [
+                {
+                  "SourceFile": "sip_timers/uas_send_500.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "120s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAC_500_RETRANSMISSION",
+              "Commands": [
+                {
+                  "SourceFile": "sip_timers/uac_ignore_error_responses.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%% -d 40000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "120s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "CheckRetransmission": [
+            {
+              "Timer": "G",
+              "UA": "user:2",
+              "Msg": {
+                "MsgType": "response",
+                "Method": "INVITE",
+                "Code": 500
+              }
+            },
+            {
+              "Timer": "H",
+              "UA": "user:2",
+              "Msg": {
+                "MsgType": "response",
+                "Method": "INVITE",
+                "Code": 500
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

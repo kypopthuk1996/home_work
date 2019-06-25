@@ -1,0 +1,28 @@
+{
+  "SystemVars": [
+    {
+      "%%SIPP_PATH%%": "/home/vragov/Work/sipp/SIPp/sipp",
+      "%%SRC_PATH%%": "/home/vragov/Work/scripts",
+      "%%MEDIA_PATH%%": "/home/vragov/Work/scripts/media_files",
+      "%%TEMP_PATH%%": "/tmp/sipp_test/temp",
+      "%%LOG_PATH%%": "/tmp/sipp_test/log",
+      "%%IP%%": "192.168.116.180",
+      "%%SERV_IP%%": "192.168.116.131",
+      "%%EXTER_IP%%": "192.168.116.132",
+      "%%EXTER_PORT%%": "5061",
+      "%%DEV_USER%%": "admin",
+      "%%DEV_PASS%%": "password",
+      "%%DEV_DOM%%": "pv.ssw3",
+      "%%SSW_DEF_ROUTE%%": "default_routing",
+      "%%SSW_IPSET%%": "local",
+      "%%DEV_CONFIG_PORT%%": 8023,
+      "%%EMAIL_CLIENT%%": {
+        "SmtpConfig": {
+            "EmailServer": "172.16.0.3",
+            "EmailLogin": "test.user@eltex.loc",
+            "EmailPassword": "tester"
+        }
+      }
+    }
+  ]
+}

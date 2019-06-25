@@ -1,0 +1,78 @@
+{
+  "TestName": "sip_t_trunk_test",
+  "AutoTest": true,
+  "Trunks": [
+    {
+      "TrunkId": 1,
+      "TrunkName": "sip_t_trunk",
+      "Port": 5094,
+      "SipDomain": "%%DEV_DOM%%",
+      "SipGroup": "sip_t_test"
+    },
+    {
+      "TrunkId": 2,
+      "TrunkName": "sip_proxy_trunk_for_sipt_test",
+      "Port": 5095,
+      "SipDomain": "%%DEV_DOM%%",
+      "SipGroup": "sip_t_test"
+    }
+  ],
+  "UserVar": [
+    {
+      "%%ctx_to_sipt%%": "PGNvbnRleHQgeG1sbnM6eHM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNlIiB4czpub05hbWVzcGFjZVNjaGVtYUxvY2F0aW9uPSJlY3NzX3JvdXRpbmcueHNkIiBuYW1lPSJjdHhfZm9yX3NpcF90X3RydW5rX3Rlc3QiIGRpZ2l0bWFwPSIoKlswLTkqXVswLTkqXS4jfCNbMC05Kl1bMC05Kl0uI3wqI1swLTkqXVswLTkqXS4jfDF4eC58MTB4eC4pIj4KICA8cnVsZSBuYW1lPSJydWxlMSI+CiAgICA8Y29uZGl0aW9ucz4KICAgICAgPGZpbmFsIHZhbHVlPSJ0cnVlIi8+CiAgICAgIDxjZHBuIGRpZ2l0cz0iJSIvPgogICAgPC9jb25kaXRpb25zPgogICAgPHJlc3VsdD4KICAgICAgPGV4dGVybmFsPgogICAgICAgIDx0cnVuayB2YWx1ZT0ic2lwX3RfdHJ1bmsiLz4KICAgICAgPC9leHRlcm5hbD4KICAgIDwvcmVzdWx0PgogIDwvcnVsZT4KPC9jb250ZXh0Pg==",
+      "%%ctx_name%%": "ctx_for_sip_t_trunk_test",
+      "%%cdpn_num%%": "9999",
+      "%%cgpn_num%%": "3000"
+    }
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/routing/.xbin/.import-context --xml-base64 %%ctx_to_sipt%%",
+    "/domain/%%DEV_DOM%%/trunk/sip/declare default_routing %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% %%SSW_IPSET%% static %%IP%% %%Tr.1.Port%% sip-t %%EXTER_PORT%%",
+    "/domain/%%DEV_DOM%%/trunk/sip/declare %%ctx_name%% %%Tr.2.SipGroup%% %%Tr.2.TrunkName%% %%SSW_IPSET%% static %%IP%% %%Tr.2.Port%% sip-proxy %%EXTER_PORT%%"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/trunk/sip/remove %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% --force",
+    "/domain/%%DEV_DOM%%/trunk/sip/remove %%Tr.2.SipGroup%% %%Tr.2.TrunkName%% --force",
+    "/domain/%%DEV_DOM%%/routing/delete %%ctx_name%%"
+  ],
+  "Tests": [
+    {
+      "Name": "sip_t_outgoing_call_test",
+      "Description": "Проверка исходящих вызовов по sip-t. Делаем вызов в sip-t транк с sip-proxy транка. Ожидается, что вызов пройдёт успешно.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "Name": "UAS_RECV_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "trunk_test/uas_sipt_send_bye.xml",
+                  "Options": "-m 1 -d 4000",
+                  "SippType": "uas",
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "Trunk",
+              "TrunkId": 2,
+              "WriteStat": true,
+              "Name": "UAC_RECV_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%cdpn_num%% -set CDPNDOM %%Tr.1.SipDomain%% -set CGPN %%cgpn_num%% -set CGPNDOM %%Tr.2.SipDomain%% -d 3000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+<scenario name = "uac_send_481_on_notify">
+
+<Global variables="CDPNDOM,CGPNDOM,CDPN" />
+<User variables="cdpn_dom,cgpn_dom,cdpn,check_state" />
+
+<nop hide="true">
+    <action>
+        <assignstr assign_to="local_tag" value="[call_number][pid]"/>
+        <assignstr assign_to="cgpn_dom" value="[$CGPNDOM]"/>
+        <assignstr assign_to="cdpn_dom" value="[$CDPNDOM]"/>
+        <assignstr assign_to="cdpn" value="[$CDPN]"/>
+    </action>
+</nop>
+
+<send>
+<![CDATA[
+    SUBSCRIBE sip:[$cdpn]@[remote_ip]:[remote_port] SIP/2.0
+    Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+    From: "BLF send 481 on NOTIFY" <sip:[service]@[$cgpn_dom]>;tag=[$local_tag]
+    To: <sip:[$cdpn]@[$cdpn_dom]>
+    Call-ID: [call_id]
+    CSeq: [cseq] SUBSCRIBE
+    Contact: <sip:[service]@[local_ip]:[local_port]>
+    Event: dialog
+    Accept: application/dialog-info+xml
+    Expires: 3600
+    Content-Length: 0
+]]>
+</send>
+
+<recv response="401" auth="true" optional="true" next="auth_subscribe"/>
+
+<label id="recv_200_on_subscribe"/>
+
+<recv response="200"/>
+
+<pause milliseconds="1000"/>
+
+<label id="wait_notify" />
+
+<recv request="NOTIFY" next="handle_notify">
+    <action>
+        <assign assign_to="dummy" value="" />
+        <assign assign_to="check_state" value="" />
+        <ereg regexp="<state>([a-z]+)</state>" search_in="msg" check_it="true" assign_to="dummy,blf_state"/>
+    </action>
+</recv>
+
+<label id="wait_notify_with_timeout" />
+
+<!-- Waiting notifications to dead subscription -->
+
+<recv request="NOTIFY" timeout="5000" ontimeout="exit">
+    <action>
+        <warning message="Call changed state to: [$blf_state]" />
+        <warning message="Ecss-10 send notify to non-existent subscription. Call to A. Petrov (2211) and ask him: wtf!?"/>
+        <assignstr assign_to="sub_fail" value="true"/>
+    </action>
+</recv>
+
+<send next="exit">
+<![CDATA[
+    SIP/2.0 200 OK
+    [last_Via:]
+    [last_From:]
+    [last_To:]
+    [last_Call-ID:]
+    [last_CSeq:]
+    Content-Length: 0
+]]>
+</send>
+
+<label id="handle_notify" />
+
+<!-- Exit if fail flag is setted -->
+<nop next="exit" test="sub_fail" test_var_value="true"/>
+
+<!-- Set first state to trying -->
+
+<nop hide="true" condexec="next_state" condexec_inverse="true">
+    <action>
+        <assignstr assign_to="next_state" value="trying"/>
+    </action>
+</nop>
+
+<!-- Comparing current state and next state -->
+
+<nop hide="true" condexec="next_state">
+    <action>
+        <strcmp assign_to="state_compare" variable="blf_state" variable2="next_state"/>
+    </action>
+</nop>
+
+<nop hide="true" condexec="state_compare">
+    <action>
+        <warning message="Recv message with unexpected state: [$blf_state]. Expected state: [$next_state]"/>
+        <assignstr assign_to="sub_fail" value="true"/>
+    </action>
+</nop>
+
+<nop hide="true" test="blf_state" test_var_value="trying" next="send_200" condexec="blf_state" condexec_var_value="trying">
+    <action>
+        <warning message="Call changed state to: [$blf_state]" />
+        <assignstr assign_to="next_state" value="early"/>
+    </action>
+</nop>
+
+<nop hide="true" test="blf_state" test_var_value="early" next="send_481" condexec="blf_state" condexec_var_value="early">
+    <action>
+        <warning message="Call changed state to: [$blf_state]" />
+    </action>
+</nop>
+
+<nop hide="true" next="exit">
+    <action>
+        <assignstr assign_to="sub_fail" value="true"/>
+    </action>
+</nop>
+
+
+<label id="send_200"/>
+
+<send next="wait_notify">
+<![CDATA[
+    SIP/2.0 200 OK
+    [last_Via:]
+    [last_From:]
+    [last_To:]
+    [last_Call-ID:]
+    [last_CSeq:]
+    Content-Length: 0
+]]>
+</send>
+
+<label id="send_481"/>
+
+<!-- Отправка 481 на NOTIFY с early
+
+Послушный ссв должен сделать вот так:
+
+rfc3265:
+
+If a NOTIFY request receives a 481 response, the notifier MUST remove
+   the corresponding subscription even if such subscription was
+   installed by non-SUBSCRIBE means (such as an administrative
+   interface).
+
+-->
+
+<send next="wait_notify_with_timeout">
+<![CDATA[
+    SIP/2.0 481 Transaction does not exist
+    [last_Via:]
+    [last_From:]
+    [last_To:]
+    [last_Call-ID:]
+    [last_CSeq:]
+    Content-Length: 0
+]]>
+</send>
+
+<label id="auth_subscribe"/>
+
+<send next="recv_200_on_subscribe">
+<![CDATA[
+    SUBSCRIBE sip:[$cdpn]@[remote_ip]:[remote_port] SIP/2.0
+    Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+    From: "BLF send 481 on NOTIFY" <sip:[service]@[$cgpn_dom]>;tag=[$local_tag]
+    To: <sip:[$cdpn]@[$cdpn_dom]>
+    Call-ID: [call_id]
+    [authentication]
+    CSeq: [cseq] SUBSCRIBE
+    Contact: <sip:[service]@[local_ip]:[local_port]>
+    Event: dialog
+    Accept: application/dialog-info+xml
+    Expires: 3600
+    Content-Length: 0
+]]>
+</send>
+
+
+<label id="exit"/>
+<!-- Checking failed flag before exit -->
+<pause milliseconds="2000"/>
+
+<nop hide="true" condexec="sub_fail">
+    <action>
+        <exec int_cmd="stop_now"/>
+    </action>
+</nop>
+
+</scenario>

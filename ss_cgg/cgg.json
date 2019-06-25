@@ -1,0 +1,569 @@
+{
+  "TestName": "ss_cgg_test",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 0,
+      "Number": "156",
+      "Login": "156",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10100,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    },
+    {
+      "UserId": 1,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10106,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    },
+    {
+      "UserId": 2,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10107,
+      "SipGroup": "sip.ab",
+      "QParam": 1
+    },
+    {
+      "UserId": 3,
+      "Number": "159",
+      "Login": "159",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10108,
+      "SipGroup": "sip.ab",
+      "QParam": 1
+    },
+    {
+      "UserId": 4,
+      "Number": "155",
+      "Login": "155",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10109,
+      "QParam": 1
+    }
+  ],
+  "UserVar": [
+    {
+      "%%CggGroup%%": "[%%1.Number%%,%%2.Number%%,%%3.Number%%]",
+      "%%CggUser%%": "%%0.Number%%",
+      "%%CggSipDomain%%": "%%0.SipDomain%%",
+      "%%CggSipGroup%%": "%%0.SipGroup%%"
+    }
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/ss/enable %%CggUser%% cgg",
+    "/domain/%%DEV_DOM%%/ss/activate %%CggUser%% cgg numbers = %%CggGroup%%"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/ss/deactivate %%CggUser%% cgg",
+    "/domain/%%DEV_DOM%%/ss/disable %%CggUser%% cgg"
+  ],
+  "Tests": [
+    {
+      "Name": "simple_cgg_test",
+      "Description": "Проверка сервиса cgg. На групповой номер из 3 абонентов совершается 3 вызова, абоненты по очереди отвечают на данные вызовы.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_CGG_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1 -d 1000",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                },
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1 -set SILENT_CANCEL true",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                },
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1 -set SILENT_CANCEL true",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_CGG_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1 -set SILENT_CANCEL true",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                },
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1 -d 1000",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                },
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1 -set SILENT_CANCEL true",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_CGG_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1 -set SILENT_CANCEL true",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                },
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1 -set SILENT_CANCEL true",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                },
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1 -d 1000",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_WOUT100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 3 -r 1 -rp 2000 -l 1 -set CDPN %%CggUser%% -set CDPNDOM %%CggSipDomain%% -d 3000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "simple_cgg_test_with_100rel",
+      "Description": "Проверка сервиса cgg. На групповой номер из 3 абонентов совершается 3 вызова, абоненты по очереди отвечают на данные вызовы. Все UA требуют 100rel",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_CGG_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                },
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_cancel.xml",
+                  "Options": "-m 1 -set SILENT_CANCEL true",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                },
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_cancel.xml",
+                  "Options": "-m 1 -set SILENT_CANCEL true",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_CGG_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_cancel.xml",
+                  "Options": "-m 1 -set SILENT_CANCEL true",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                },
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                },
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_cancel.xml",
+                  "Options": "-m 1 -set SILENT_CANCEL true",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_CGG_WITH100REL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_cancel.xml",
+                  "Options": "-m 1 -set SILENT_CANCEL true",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                },
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_cancel.xml",
+                  "Options": "-m 1 -set SILENT_CANCEL true",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                },
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_WITH_100rel",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uac_send_bye.xml",
+                  "Options": "-m 3 -r 1 -rp 2000 -l 1 -set CDPN %%CggUser%% -set CDPNDOM %%CggSipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "cgg_race_of_200ok_and_cancel",
+      "Description": "Проверка того, что адаптер отбивает вызов через BYE, если абонент Б дал 200 OK.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_RACE_OF_200_AND_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "ss_cgg/uas_race_of_cancel_and_200.xml",
+                  "Options": "-m 1 -nr",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_RACE_OF_200_AND_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "ss_cgg/uas_race_of_cancel_and_200.xml",
+                  "Options": "-m 1 -nr",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_RACE_OF_200_AND_CANCEL_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%CggUser%% -set CDPNDOM %%CggSipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "cgg_race_of_200ok_and_cancel_req100rel",
+      "Description": "Проверка того, что адаптер отбивает вызов через BYE, если абонент Б дал 200 OK (req100rel)",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_RACE_OF_200_AND_CANCEL_REQ100REl",
+              "Commands": [
+                {
+                  "SourceFile": "ss_cgg/req100rel/uas_race_of_cancel_and_200.xml",
+                  "Options": "-m 1 -nr",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_RACE_OF_200_AND_CANCEL_REQ100REl",
+              "Commands": [
+                {
+                  "SourceFile": "ss_cgg/req100rel/uas_race_of_cancel_and_200.xml",
+                  "Options": "-m 1 -nr",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_RACE_OF_200_AND_CANCEL_REQ100REl_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_SEND_BYE_REQ100REl",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/req100rel/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%CggUser%% -set CDPNDOM %%CggSipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "cancel_call_from_a_side",
+      "Description": "Проверка отбоя группового вызова со стороны абонента А посредством запроса CANCEL. A звонит на групповой номер, получает 180 и отправляет CANCEL. Ожидается, что абонентам группы будет отправлен CANCEL. Ожидается, что в данных CANCEL будет отсутствовать заголовок Reason: SIP;cause=200.",
+      "TestProcedure": [
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1 -nr",
+                  "SippType": "uas",
+                  "Timeout": "15s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1 -nr",
+                  "SippType": "uas",
+                  "Timeout": "15s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "15s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_SEND_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_cancel.xml",
+                  "Options": "-m 1 -set CDPN %%CggUser%% -set CDPNDOM %%CggSipDomain%% -d 2000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "15s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "cancel_call_by_no_answer_timer",
+      "Description": "Проверка отбоя группового вызова по таймеру неответа. Устанавливаем таймер неответа на групповой номер. A звонит на групповой номер, ни один из участников группы не отвечает на вызвов. Ожидается, что по истечению таймера абоненту А будет отправлен 480 ответ на вызов, а абонентам группы будет отправлен CANCEL. Ожидается, что в данных CANCEL будет отсутствовать заголовок Reason: SIP;cause=200.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/alias/set %%CggUser%% %%CggSipGroup%% %%CggUser%%@%%CggSipDomain%% no_answer_timeout 4s"
+          ]
+        },
+        {
+          "Sleep": 4
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAS1_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1 -nr",
+                  "SippType": "uas",
+                  "Timeout": "15s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS2_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1 -nr",
+                  "SippType": "uas",
+                  "Timeout": "15s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "WriteStat": true,
+              "Name": "UAS3_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "Timeout": "15s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 4,
+              "WriteStat": true,
+              "Name": "UAC_RECV_480",
+              "Commands": [
+                {
+                  "SourceFile": "ss_cgg/uac_recv_480.xml",
+                  "Options": "-m 1 -set CDPN %%CggUser%% -set CDPNDOM %%CggSipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "15s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/alias/clean %%CggUser%% %%CggSipGroup%% %%CggUser%%@%%CggSipDomain%% no_answer_timeout"
+          ]
+        }
+      ]
+    }
+  ]
+}

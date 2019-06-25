@@ -1,0 +1,187 @@
+{
+  "TestName": "rfc3261_oa_model",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 0,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 11001,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    },
+    {
+      "UserId": 1,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 11002,
+      "SipGroup": "sip.ab",
+      "QParam": 1
+    }
+  ],
+  "UserVar": [
+    {}
+  ],
+  "PreConf": [],
+  "PostConf": [],
+  "Tests": [
+    {
+      "Name": "send_a_sdp_in_183_180_200",
+      "Description": "Отправка a_sdp в 183, 180 и 200 сообщениях. А звонит на Б, Б отпраляет a_sdp в 183, потом дублирует a_sdp в 180 и 200 сообщениях.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_SEND_180_AFTER_183",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3261/uas_send_180_after_183.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "20s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAC_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "20s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "send_a_sdp_in_180_183_200",
+      "Description": "Отправка a_sdp в 180, 183 и 200 сообщениях. А звонит на Б, Б отпраляет a_sdp в 180, потом дублирует a_sdp в 183 и 200 сообщениях.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_SEND_183_AFTER_180",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3261/uas_send_183_after_180.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "20s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAC_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "20s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "send_invite_wout_o_sdp",
+      "Description": "Проверка обработки invite без osdp. А отправляет INVITE без SDP, ожидается, что o_sdp будет отправлен в 200 ответе.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -d 2000",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "20s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAC_SEND_INVITE_WOUT_SDP",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3261/uac_send_invite_wout_offer.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "20s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "send_diff_sdp_in_183",
+      "Description": "Отправляем разные sdp в 183 и 200. Спекой такое поведение запрещается. Ожидается, что будет использован последний a_sdp",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_SEND_DIFF_SDP_IN_183",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3261/uas_send_diff_sdp.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "20s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAC_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "20s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

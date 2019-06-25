@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+<scenario name = "UAS check of absence 100rel in Support header. Recv CANCEL">
+<Global variables="SILENT_CANCEL"/>
+<User variables="dummy"/>
+<Reference variables="dummy"/>
+
+<recv request="INVITE">
+<action>
+    <ereg regexp="[0-9]+" search_in="hdr" header="CSeq:" assign_to="inv_cseq" />
+    <assignstr assign_to="local_tag" value="[call_number][pid]"/>
+    <log message="INVITE [timestamp]"/>
+    <!-- Проверяем наличие заголовка support -->
+    <ereg regexp="Supported:" search_in="msg" check_it="true" assign_to="dummy" />
+    <ereg regexp="100rel" search_in="hdr" header="Supported:" check_it_inverse="true" assign_to="dummy" />
+</action>
+</recv>
+
+<send>
+<![CDATA[
+    SIP/2.0 100 Trying
+    [last_Via:]
+    [last_From:]
+    [last_To:]
+    [last_Call-ID:]
+    [last_CSeq:]
+    Content-Length: 0
+]]>
+</send>
+
+<send>
+<![CDATA[
+    SIP/2.0 180 Ringing
+    [last_Via:]
+    [last_From:]
+    [last_To:];tag=[$local_tag]
+    [last_Call-ID:]
+    [last_CSeq:]
+    Content-Length: 0
+]]>
+</send>
+
+<recv request="CANCEL">
+    <action>
+        <ereg regexp="Reason: SIP;cause=200" search_in="msg" assign_to="silent_cancel" />
+    </action>
+</recv>
+
+<send>
+<![CDATA[
+    SIP/2.0 200 OK
+    [last_Via:]
+    [last_From:]
+    [last_To:]
+    [last_Call-ID:]
+    CSeq: [$inv_cseq] CANCEL
+    Content-Length: 0
+]]>
+</send>
+
+<send>
+<![CDATA[
+    SIP/2.0 487 Request Cancelled
+    [last_Via:]
+    [last_From:]
+    [last_To:]
+    [last_Call-ID:]
+    CSeq: [$inv_cseq] INVITE
+    Content-Length: 0
+]]>
+</send>
+
+<recv request="ACK"></recv>
+
+
+<!-- Check CANCEL reason -->
+
+<nop hide="true" test="SILENT_CANCEL" next="need_silent_cancel"/>
+<nop hide="true" next="dont_need_silent_cancel"/>
+
+<label id="need_silent_cancel"/>
+
+<nop hide="true" condexec="silent_cancel" condexec_inverse="true" next="check_continue">
+    <action>
+        <warning message="Receive CANCEL without Reason: SIP;cause=200 but this header need"/>
+        <exec int_cmd="stop_now"/>
+    </action>
+</nop>
+
+<label id="dont_need_silent_cancel"/>
+
+<nop hide="true" condexec="silent_cancel">
+    <action>
+        <warning message="Receive CANCEL with Reason: SIP;cause=200 but this header don't need"/>
+        <exec int_cmd="stop_now"/>
+    </action>
+</nop>
+
+<label id="check_continue"/>
+
+</scenario>

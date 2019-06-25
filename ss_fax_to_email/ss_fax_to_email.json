@@ -1,0 +1,396 @@
+{
+  "TestName": "ss_fax_to_email",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 0,
+      "Number": "156",
+      "Login": "156",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 20105,
+      "QParam": 0.5
+    },
+    {
+      "UserId": 1,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 20106,
+      "QParam": 0.5
+    },
+    {
+      "UserId": 2,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 20107,
+      "QParam": 0.5
+    }
+  ],
+  "UserVar": [
+    {
+      "%%EMAIL%%": "eltex.tester@bk.ru",
+      "%%FAX_SENDER_NAME%%": "\"Fax sender\"",
+      "%%FAX_RECVER_NAME%%": "\"Fax receiver\"",
+      "%%FEATURE_CODE%%": "*73#"
+    }
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/alias/set %%1.Number%% %%1.SipGroup%% %%1.Number%%@%%1.SipDomain%% displayName %%FAX_SENDER_NAME%%",
+    "/domain/%%DEV_DOM%%/alias/set %%0.Number%% %%0.SipGroup%% %%0.Number%%@%%0.SipDomain%% displayName %%FAX_RECVER_NAME%%",
+    "/domain/%%DEV_DOM%%/ss/enable %%0.Number%% fax_to_email chold ctr cfu cfnr",
+    "/domain/%%DEV_DOM%%/ss/enable {%%0.Number%%,%%1.Number%%} clip cnip",
+    "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%,%%1.Number%%} clip",
+    "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%,%%1.Number%%} cnip",
+    "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% chold",
+    "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% ctr",
+    "/domain/%%DEV_DOM%%/sip/user/set %%0.SipGroup%% %%0.Number%%@%%0.SipDomain%% remote-ctr-indication none",
+    "/domain/%%DEV_DOM%%/sip/user/set %%1.SipGroup%% %%1.Number%%@%%1.SipDomain%% remote-ctr-indication none"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/alias/clean %%1.Number%% %%1.SipGroup%% %%1.Number%%@%%1.SipDomain%% displayName",
+    "/domain/%%DEV_DOM%%/alias/clean %%0.Number%% %%0.SipGroup%% %%0.Number%%@%%0.SipDomain%% displayName",
+    "/domain/%%DEV_DOM%%/ss/deactivate {%%0.Number%%,%%1.Number%%} clip",
+    "/domain/%%DEV_DOM%%/ss/deactivate {%%0.Number%%,%%1.Number%%} cnip",
+    "/domain/%%DEV_DOM%%/ss/disable {%%0.Number%%,%%1.Number%%} clip cnip",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% fax_to_email",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% chold",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% ctr",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% cfu",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% cfnr",
+    "/domain/%%DEV_DOM%%/ss/disable %%0.Number%% fax_to_email cfu cfnr ctr chold",
+    "/domain/%%DEV_DOM%%/sip/user/clean %%0.SipGroup%% %%0.Number%%@%%0.SipDomain%% remote-ctr-indication --force",
+    "/domain/%%DEV_DOM%%/sip/user/clean %%1.SipGroup%% %%1.Number%%@%%1.SipDomain%% remote-ctr-indication --force"
+  ],
+  "Tests": [
+    {
+      "Name": "test_ss_fax2email_for_direct_call",
+      "Description": "Проверка дво fax2email для прямого вызова на фича-код. Активируем услугу fax2email. Звоним на фича-код услуги и передаём факс. Ожидается, что факс передастся успешно.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% fax_to_email email = %%EMAIL%%"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAC_SEND_T38_FAX",
+              "Commands": [
+                {
+                  "SourceFile": "ss_fax_to_email/uac_send_t38_fax.xml",
+                  "Options": "-m 1 -set CDPN %%FEATURE_CODE%% -set CDPNDOM %%0.SipDomain%% -d 60000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "90s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_ss_fax2email_reject_call(ss_not_activated)",
+      "Description": "Проверка отбоя вызова на фича-код услуги fax_to_email в случае, когда услуга не активирована. Деактивируем услугу у абонента. Звоним на фича-код услуги. Ожидается, что вызов будет отбит.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% fax_to_email"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAC_RECV_480",
+              "Commands": [
+                {
+                  "SourceFile": "ss_fax_to_email/uac_recv_480.xml",
+                  "Options": "-m 1 -set CDPN %%FEATURE_CODE%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_ss_fax2email_for_transfered_call(unattended_transfer)",
+      "Description": "Проверка услуги fax_to_email в случае несопровождаемого трансфера на фича-код услуги. А звонит на Б, А делает несопровождаемый трансфер на фича-код услуги. Ожидается, что на сторону Б пойдёт пересогласование на t38 и начнётся процедура приёма факса.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% fax_to_email email = %%EMAIL%%"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_SEND_T38_FAX",
+              "Commands": [
+                {
+                  "SourceFile": "ss_fax_to_email/uas_send_t38_fax.xml",
+                  "Options": "-m 1 -d 60000",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "90s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAC_MAKE_UNAT_TRANSFER",
+              "Commands": [
+                {
+                  "SourceFile": "ss_fax_to_email/uac_succ_unattended_transfer.xml",
+                  "Options": "-m 1 -set FIRST_CDPN %%1.Number%% -set SECOND_CDPN %%FEATURE_CODE%% -set CDPNDOM %%1.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_ss_fax2email_reject_transfer(ss_not_activated)",
+      "Description": "Проверка невозможности совершения трансфера на фича-код услуги в случае, когда услуга не активирована. Деактивируем услугу у абонента А. А звонит на Б, А делает несопровождаемый трансфер на фича-код услуги. Ожидается, что трансфер будет отклонён.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% fax_to_email"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_RECV_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1 -d 2000",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAC_FAIL_UNAT_TRANSFER",
+              "Commands": [
+                {
+                  "SourceFile": "ss_fax_to_email/uac_fail_unattended_transfer.xml",
+                  "Options": "-m 1 -set FIRST_CDPN %%1.Number%% -set SECOND_CDPN %%FEATURE_CODE%% -set CDPNDOM %%1.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_ss_fax2email_for_transfered_call(attended_transfer)",
+      "Description": "Проверка услуги fax_to_email в случае сопровождаемого трансфера на фича-код услуги. А звонит на Б, А звонит на фича-код услуги, А делает сопровождаемый трансфер абонента Б на фича-код. Ожидается, что на сторону Б пойдёт пересогласование на t38 и начнётся процедура приёма факса.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% fax_to_email email = %%EMAIL%%"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_SEND_T38_FAX",
+              "Commands": [
+                {
+                  "SourceFile": "ss_fax_to_email/uas_send_t38_fax.xml",
+                  "Options": "-m 1 -d 60000",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "90s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAC_MAKE_AT_TRANSFER",
+              "Commands": [
+                {
+                  "SourceFile": "ss_fax_to_email/uac_succ_attended_transfer.xml",
+                  "Options": "-m 1 -set FIRST_CDPN %%1.Number%% -set SECOND_CDPN %%FEATURE_CODE%% -set CDPNDOM %%1.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_ss_fax2email_redirecting_call(redirect_by_cfu)",
+      "Description": "Проверка услуги fax_to_email в случае безусловной переадресации на фича-код услуги. Абоненту Б активируем cfu на фича-код услуги. A звонит на Б, система переадресует данный вызов на фича-код услуги. Ожидается, что абоненту А придёт re-invite с T38 и начнётся процедура приёма факса.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% fax_to_email email = %%EMAIL%%",
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% cfu  number=%%FEATURE_CODE%%"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAC_SEND_T38_FAX",
+              "Commands": [
+                {
+                  "SourceFile": "ss_fax_to_email/uac_send_t38_fax.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%% -d 60000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "90s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% cfu"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_ss_fax2email_redirecting_call(redirect_by_cfnr)",
+      "Description": "Проверка услуги fax_to_email в случае переадресации по не ответу на фича-код услуги. Абоненту Б активируем cfnr на фича-код услуги. A звонит на Б, система переадресует данный вызов на фича-код услуги. Ожидается, что абоненту А придёт re-invite с T38 и начнётся процедура приёма факса.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% fax_to_email email = %%EMAIL%%",
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% cfnr number=%%FEATURE_CODE%%, timeout = 5"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAS_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "90s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAC_SEND_T38_FAX",
+              "Commands": [
+                {
+                  "SourceFile": "ss_fax_to_email/uac_send_t38_fax.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%% -d 60000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "90s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% cfnr"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_ss_fax2email_reject_redirecting_call(redirect_by_cfnr)",
+      "Description": "Проверка отбоя вызова, который был переадресован на фича-код fax_to_email, для случая, когда у переадресующего абонента не активирована услуга fax_to_email. Деактивируем абоненту Б fax_to_email, активируем абоненту Б cfnr на фича-код fax_to_email. A звонит на Б, система переадресует данный вызов на фича-код услуги. Ожидается, что вызов будет отбит.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% fax_to_email",
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% cfnr number=%%FEATURE_CODE%%, timeout = 5"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAS_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "90s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAC_RECV_480",
+              "Commands": [
+                {
+                  "SourceFile": "ss_fax_to_email/uac_recv_480.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%% -d 60000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "90s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% cfnr"
+          ]
+        }
+      ]
+    }
+  ]
+}

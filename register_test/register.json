@@ -1,0 +1,295 @@
+{
+  "TestName": "register_test",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 1,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10106,
+      "QParam": 0.5
+    },
+    {
+      "UserId": 2,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10109,
+      "RegContactIP": "1.1.1.1",
+      "RegContactPort": 5060,
+      "QParam": 0.5,
+      "RegMode": "Manual"
+    },
+    {
+      "UserId": 3,
+      "Number": "159",
+      "Login": "159",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10110,
+      "QParam": 0.5,
+      "RegMode": "Manual"
+    }
+  ],
+  "UserVar": [
+    {}
+  ],
+  "PreConf": [],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/sip/properties/set realm"
+  ],
+  "Tests": [
+    {
+      "Name": "register_foreign_contact",
+      "Description": "Регистрируем левый контакт. Делаем вызов с другого IP:PORT - вызов проходит.",
+      "TestProcedure": [
+        {
+          "ManualReg": {
+            "Users": {
+              "2": {
+                "script": "register_test/success_registration_with_auth.xml",
+                "contact_ip": "1.1.1.1",
+                "contact_port": 5060
+              }
+            }
+          }
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_RECV_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "Name": "UAC_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "20s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "DropManualReg": {
+            "Users": [
+              "2"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Name": "register_contact_with_uuid",
+      "Description": "Регистрируем контакт с uuid:313230-AABB-0000-0000-B40EDC015E9A",
+      "TestProcedure": [
+        {
+          "ManualReg": {
+            "Users": {
+              "3": {
+                "script": "register_test/reg_contact_with_uuid.xml"
+              }
+            }
+          }
+        },
+        {
+          "ManualReg": {
+            "Users": {
+              "3": {
+                "script": "register_test/reg_contact_with_uuid.xml",
+                "need_drop": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "Name": "test_qop_authentication",
+      "Description": "Тестирование опции qop-authentication.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/sip/user/set %%3.SipGroup%% %%3.Number%%@%%3.SipDomain%% qop-authentication true"
+          ]
+        },
+        {
+          "ManualReg": {
+            "Users": {
+              "3": {
+                "script": "register_test/success_registration_chk_qop.xml",
+                "expires": 90,
+                "need_drop": true
+              }
+            }
+          }
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/sip/user/set %%3.SipGroup%% %%3.Number%%@%%3.SipDomain%% qop-authentication false"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_reg_and_invite_retransmissions",
+      "Description": "Регистрируем пользователя. Делаем перерегистрацию при этом игнорируя 401 ответ. После отправки второго REGISTER обрабатываем 401. Тоже самое делаем с INVITE",
+      "TestProcedure": [
+        {
+          "ManualReg": {
+            "Users": {
+              "3": {
+                "script": "register_test/succ_reg_with_retrans.xml",
+                "expires": 90,
+                "additional_options": " -nr"
+              }
+            }
+          }
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_RECV_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "Name": "UAC_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "register_test/uac_invite_retarans.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%% -nr",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "20s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "DropManualReg": {
+            "Users": [
+              "3"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Name": "test_clearing_of_nonce",
+      "Description": "Проверка очистки старых nonce на ssw. Отправляем REGISTER, получаем 401 ответ, но REGISTER с WWW-Authenticate не отправляем. Через несколько секунд отправляем новый REGISTER, получаем 401, отправляем REGISTER с WWW-Authenticate. Ожидается, что ssw ответит 200 ответом. Далее через 35 сек шлём перерегистрацию. Ожидается, что перерегистрация пройдёт успешно.",
+      "Ref": "#113686",
+      "TestProcedure": [
+        {
+          "ManualReg": {
+            "Users": {
+              "3": {
+                "script": "register_test/send_double_registration.xml",
+                "expires": 90,
+                "additional_options": " -nr",
+                "timeout": 60,
+                "need_drop": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "Name": "test_realm_in_register",
+      "Description": "Проверка корректной обработки некорректных для сервера from/to и realm. Отправляем REGISTER с несуществующими на домене и номеров в from/to и realm. Ожидаем получить 403 ответ.",
+      "Ref": "#118855",
+      "TestProcedure": [
+        {
+          "ManualReg": {
+            "Users": {
+              "3": {
+                "script": "register_test/uac_send_incorrect_realm.xml",
+                "expires": 90,
+                "additional_options": " -nr",
+                "timeout": 60,
+                "need_drop": false
+              }
+            }
+          }
+        },
+        {
+          "DropManualReg": {
+            "Users": [
+              "3"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Name": "test_realm",
+      "Description": "Проверка корректной обработки нестандартного realm. Отправляем REGISTER, ожидаем получиние 401 с нестандартным realm, ждем успешной регистрации.",
+      "Ref": "#118855",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/sip/properties/set realm gtr"
+          ]
+        },
+        {
+          "ManualReg": {
+            "Users": {
+              "3": {
+                "script": "register_test/success_registration_with_auth.xml",
+                "expires": 90,
+                "additional_options": " -nr",
+                "timeout": 60,
+                "need_drop": false
+              }
+            }
+          }
+        },
+        {
+          "DropManualReg": {
+            "Users": [
+              "3"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

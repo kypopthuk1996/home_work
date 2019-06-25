@@ -1,0 +1,111 @@
+{
+  "TestName": "alternate_route_sip_causes",
+  "AutoTest": true,
+  "Trunks": [
+    {
+      "TrunkId": 1,
+      "TrunkName": "sip_test_alternate_route_response_404",
+      "Port": 5094,
+      "SipDomain": "%%DEV_DOM%%",
+      "SipGroup": "sip_transport"
+    },
+    {
+      "TrunkId": 2,
+      "TrunkName": "sip_test_alternate_route_response_succ",
+      "Port": 5095,
+      "SipDomain": "%%DEV_DOM%%",
+      "SipGroup": "sip_transport"
+    }
+  ],
+  "Users": [
+    {
+      "UserId": 0,
+      "Number": "156",
+      "Login": "156",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10100,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    }
+  ],
+  "UserVar": [
+    {
+      "%%ctx_name%%": "ctx_alternate_route_sip_causes",
+      "%%ctx_header%%": "<context xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\" xs:noNamespaceSchemaLocation=\"ecss_routing.xsd\" name=\"%%ctx_name%%\" digitmap=\"(*[0-9*][0-9*].#|#[0-9*][0-9*].#|*#[0-9*][0-9*].#|1xx.|10xx.)\"> <rule name=\"call_user_in_trunk\"> <conditions> <cdpn digits=\"%\"/> </conditions> <result> <external> <trunk value=\"%%Tr.1.TrunkName%%\" weight=\"1000000000\" max_load=\"10\"/> <trunk value=\"%%Tr.2.TrunkName%%\" weight=\"1\" max_load=\"10\"/> </external> </result> </rule> </context>",
+      "%%cdpn_trunk_number%%": "99980599011"
+    }
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/routing/.xbin/.import-context --xml %%ctx_header%%",
+    "/domain/%%DEV_DOM%%/trunk/sip/declare %%ctx_name%% %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% %%SSW_IPSET%% static %%IP%% %%Tr.1.Port%% sip-proxy %%EXTER_PORT%%",
+    "/domain/%%DEV_DOM%%/trunk/sip/declare %%ctx_name%% %%Tr.2.SipGroup%% %%Tr.2.TrunkName%% %%SSW_IPSET%% static %%IP%% %%Tr.2.Port%% sip-proxy %%EXTER_PORT%%",
+    "/domain/%%DEV_DOM%%/properties/set alternate_route_sip_causes add 404",
+    "/domain/%%DEV_DOM%%/iface/user-set sip1 %%0.SipGroup%% %%0.Number%%@%%0.SipDomain%% routing.context %%ctx_name%%"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/trunk/sip/remove %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% --force",
+    "/domain/%%DEV_DOM%%/trunk/sip/remove %%Tr.2.SipGroup%% %%Tr.2.TrunkName%% --force",
+    "/domain/%%DEV_DOM%%/routing/delete %%ctx_name%%",
+    "/domain/%%DEV_DOM%%/iface/user-set sip1 %%0.SipGroup%% %%0.Number%%@%%0.SipDomain%% routing.context default_routing",
+    "/domain/%%DEV_DOM%%/properties/clean alternate_route_sip_causes 404"
+  ],
+  "Tests": [
+    {
+      "Name": "chk_alternate_route_sip_causes",
+      "Ref": "#120267",
+      "Description": "Совершаем вызов с абонента SSW на контекст в двумя транками. Первый транк отбивает сообщение 404. Ожидается, что SSW совершит вызов на второй транк согласно маршрутизации.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "WriteStat": true,
+              "Name": "UAS_TRUNK_RECV_404",
+              "Commands": [
+                {
+                  "SourceFile": "trunk_test/uas_send_404.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "Trunk",
+              "TrunkId": 2,
+              "WriteStat": true,
+              "Name": "UAS_TRUNK_RECV_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAC_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%cdpn_trunk_number%% -set CDPNDOM %%0.SipDomain%% -d 6000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

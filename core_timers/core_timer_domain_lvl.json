@@ -1,0 +1,224 @@
+{
+  "TestName": "core_timer_domain_lvl",
+  "Isolate": true,
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 1,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10106,
+      "QParam": 0.5
+    },
+    {
+      "UserId": 2,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipGroup": "sip.ab",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10107,
+      "QParam": 1
+    }
+  ],
+  "UserVar": [
+    {}
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/timers/core/set conversation_timeout 5s",
+    "/domain/%%DEV_DOM%%/timers/core/set no_answer_timeout 4s"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/timers/core/clean conversation_timeout",
+    "/domain/%%DEV_DOM%%/timers/core/clean no_answer_timeout"
+  ],
+  "Tests": [
+    {
+      "Name": "conversation_timeout_test",
+      "Description": "Проверка таймера conversation_timeout. Устанавливаем таймер conversation_timeout на уровне домена. Делаем вызов с А на Б, отвечаем. Ожидается, что вызов будет отбит по истечению таймера conversation_timeout.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "NeedAuth": true,
+              "WriteStat": true,
+              "Name": "UAS_RECV_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "NeedAuth": true,
+                  "SippType": "uas",
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "NeedAuth": true,
+              "Name": "UAC_RECV_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "NeedAuth": true,
+                  "SippType": "uac",
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "CheckDifference": [
+            {
+              "Difference": 5000,
+              "MaxError": 0.5,
+              "CompareMode": "inside_ua",
+              "SearchMode": "inside_call",
+              "UA": "user:1,user:2",
+              "Msg": [
+                {
+                  "MsgType": "response",
+                  "Method": "INVITE",
+                  "Code": 200
+                },
+                {
+                  "MsgType": "request",
+                  "Method": "BYE",
+                  "Code": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "no_answer_timeout_test",
+      "Description": "Проверка таймера no_answer_timeout. Устанавливаем таймер no_answer_timeout на уровне домена. Делаем вызов с А на Б, Б не отвечает на вызов. Ожидается, что вызов будет отменён по истечению таймера no_answer_timeout.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "NeedAuth": true,
+              "Name": "UAS_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "NeedAuth": true,
+                  "SippType": "uas",
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "NeedAuth": true,
+              "Name": "UAC_RECV_480",
+              "Commands": [
+                {
+                  "SourceFile": "core_timers/uac_recv_480.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "NeedAuth": true,
+                  "SippType": "uac",
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "CheckDifference": [
+            {
+              "Difference": 4000,
+              "MaxError": 0.5,
+              "CompareMode": "inside_ua",
+              "SearchMode": "inside_call",
+              "UA": "user:1",
+              "Msg": [
+                {
+                  "MsgType": "response",
+                  "Method": "INVITE",
+                  "Code": 180
+                },
+                {
+                  "MsgType": "request",
+                  "Method": "CANCEL",
+                  "Code": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "disable_timeouts",
+      "Description": "Проверка того, что вызовы не падают при уствновке таймеров no_answer_timeout и conversation_timeout в disabled. Bug #80285",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/timers/core/set conversation_timeout disabled",
+            "/domain/%%DEV_DOM%%/timers/core/set no_answer_timeout disabled"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "NeedAuth": true,
+              "Name": "UAS_RECV_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "NeedAuth": true,
+                  "SippType": "uas",
+                  "Timeout": "20s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "NeedAuth": true,
+              "Name": "UAC_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%% -d 10000",
+                  "NeedAuth": true,
+                  "SippType": "uac",
+                  "Timeout": "20s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/timers/core/clean conversation_timeout",
+            "/domain/%%DEV_DOM%%/timers/core/clean no_answer_timeout"
+          ]
+        }
+      ]
+    }
+  ]
+}

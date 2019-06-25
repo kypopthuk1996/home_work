@@ -1,0 +1,119 @@
+{
+  "TestName": "repeated_update",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 0,
+      "Number": "156",
+      "Login": "156",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 20000,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    },
+    {
+      "UserId": 1,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 20002,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    },
+    {
+      "UserId": 2,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 20004,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    }
+  ],
+  "UserVar": [
+    {
+      "%%name_context_to_ivr_scr%%": "call_in_ivr",
+      "%%name_ivr_scr%%": "repeated_two_update",
+      "%%context_to_ivr_scr%%": "<context xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\" xs:noNamespaceSchemaLocation=\"ecss_routing.xsd\" name=\"%%name_context_to_ivr_scr%%\" digitmap=\"(*[0-9*][0-9*].#|#[0-9*][0-9*].#|*#[0-9*][0-9*].#|1xx.|10xx.)\"> <rule name=\"%%name_context_to_ivr_scr%%\"> <conditions> <cdpn digits=\"%\"/> </conditions> <result> <ivr script=\"%%name_ivr_scr%%\"/> </result> </rule> </context>",
+      "%%ivr_scr%%": "{\"actions\":{\"begin_1\":{\"name\":\"begin\",\"params\":{\"description\":\"\"},\"pos\":{\"x\":1,\"y\":0},\"cases\":{\"next\":\"ivr_2\"},\"links\":{\"next\":{\"points\":[{\"cx\":270,\"cy\":70},{\"cx\":270,\"cy\":125},{\"cx\":270,\"cy\":180}],\"text_pos\":0.2}}},\"ivr_2\":{\"name\":\"ivr\",\"params\":{\"direct_call_to_extension\":false,\"description\":\"\",\"play\":[],\"ivr\":[{\"command\":\"1\",\"description\":\"subscriber call with \",\"phrases\":[]}],\"playback_interruption\":true,\"asr_delay\":0,\"wait_time\":5,\"extension_dialing\":false,\"category\":\"access_type0\",\"max_digits\":1,\"interdigit_timeout\":2},\"pos\":{\"x\":1,\"y\":1},\"cases\":{\"1\":\"dial_3\",\"No Match\":\"undefined\"},\"links\":{\"1\":{\"points\":[{\"cx\":270,\"cy\":220},{\"cx\":270,\"cy\":275},{\"cx\":270,\"cy\":330}],\"text_pos\":0.2},\"No Match\":{\"points\":[{\"cx\":270,\"cy\":220},{\"cx\":360,\"cy\":275},{\"cx\":450,\"cy\":330}],\"text_pos\":0.2,\"pos\":{\"x\":2,\"y\":2}}}},\"dial_3\":{\"name\":\"dial\",\"params\":{\"description\":\"call\",\"numbers\":\"%%1.Number%%\",\"noanswer_timeout\":10,\"conversation_timeout\":\"86400\"},\"pos\":{\"x\":1,\"y\":2},\"cases\":{\"Busy/No answer\":\"undefined\",\"Error\":\"undefined\"},\"links\":{\"Busy/No answer\":{\"points\":[{\"cx\":270,\"cy\":370},{\"cx\":180,\"cy\":425},{\"cx\":90,\"cy\":480}],\"text_pos\":0.2,\"pos\":{\"x\":0,\"y\":3}},\"Error\":{\"points\":[{\"cx\":270,\"cy\":370},{\"cx\":270,\"cy\":425},{\"cx\":270,\"cy\":480}],\"text_pos\":0.2,\"pos\":{\"x\":1,\"y\":3}}}}},\"name\":\"%%name_ivr_scr%%\",\"description\":\"\",\"version\":\"3.11.1.141\",\"settings\":{\"speech\":\"key=&quality=hi&lang=ru-RU&speaker=oksana&speed=1.0&emotion=neutral\"}}"
+    }
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/routing/.xbin/.import-context --xml %%context_to_ivr_scr%%",
+    "/domain/%%DEV_DOM%%/ivr/script/.import --id %%name_ivr_scr%% --json %%ivr_scr%%",
+    "/domain/%%DEV_DOM%%/iface/user-set sip1 %%0.SipGroup%% %%0.Number%%@%%0.SipDomain%% routing.context %%name_context_to_ivr_scr%%",
+    "/domain/%%DEV_DOM%%/ss/enable {%%0.Number%%-%%2.Number%%} clip cnip",
+    "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%2.Number%%} clip",
+    "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%2.Number%%} cnip",
+    "/domain/%%DEV_DOM%%/ss/enable %%1.Number%% find_me",
+    "/domain/%%DEV_DOM%%/ss/find-me/activate %%1.Number%% send_call_diversion = true",
+    "/domain/%%DEV_DOM%%/ss/find-me/add-group %%1.Number%% [%%2.Number%%] 5 true custom 1234567 00:01-23:59",
+    "/domain/%%DEV_DOM%%/sip/user/set %%0.SipGroup%% %%0.Number%%@%%DEV_DOM%% remote-ctr-indication rpi",
+    "/domain/%%DEV_DOM%%/sip/user/set %%1.SipGroup%% %%1.Number%%@%%DEV_DOM%% remote-ctr-indication rpi",
+    "/domain/%%DEV_DOM%%/sip/user/set %%2.SipGroup%% %%2.Number%%@%%DEV_DOM%% remote-ctr-indication rpi"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/iface/user-set sip1 %%0.SipGroup%% %%0.Number%%@%%0.SipDomain%% routing.context default_routing",
+    "/domain/%%DEV_DOM%%/ivr/script/delete %%name_ivr_scr%%",
+    "/domain/%%DEV_DOM%%/routing/delete %%name_context_to_ivr_scr%%",
+    "/domain/%%DEV_DOM%%/ss/deactivate {%%0.Number%%-%%2.Number%%} clip",
+    "/domain/%%DEV_DOM%%/ss/deactivate {%%0.Number%%-%%2.Number%%} cnip",
+    "/domain/%%DEV_DOM%%/ss/disable {%%0.Number%%-%%2.Number%%} cnip clip",
+    "/domain/%%DEV_DOM%%/ss/find-me/deactivate %%1.Number%%",
+    "/domain/%%DEV_DOM%%/ss/disable %%DEV_DOM%% %%1.Number%% find-me",
+    "/domain/%%DEV_DOM%%/sip/user/clean %%2.SipGroup%% %%2.Number%%@%%DEV_DOM%% remote-ctr-indication",
+    "yes",
+    "/domain/%%DEV_DOM%%/sip/user/clean %%1.SipGroup%% %%1.Number%%@%%DEV_DOM%% remote-ctr-indication",
+    "yes",
+    "/domain/%%DEV_DOM%%/sip/user/clean %%0.SipGroup%% %%0.Number%%@%%DEV_DOM%% remote-ctr-indication",
+    "yes"
+  ],
+  "Tests": [
+    {
+      "Name": "repeated_two_update",
+      "Description": "#116463 Проверка буфиризации последовательных UPDATE сообщений. Абонент 0 совершает вызов на IVR скрипт, который через IVR меню переадресут его на абонента1. Абонент 1 с услугой find-me переадресует на Абонента 2. Как только Абонент 2 ответит, абоненту 0 полетят два UPDATE. Ожидается, что SSW будет дожидаться 200OK на предыдущий UPDATE, перед отправкой нового.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAS_RECV_INV_FROM_MEET_ME",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAC_RECV_TWO_UPDATE",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3311/uac_recv_update.xml",
+                  "Options": "-m 1 -set CDPN 123123 -set CDPNDOM %%1.SipDomain%% -set CHK_UPDATE_NUMBER_FERST %%1.Number%% -set CHK_UPDATE_NUMBER_SECOND %%2.Number%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,646 @@
+{
+  "TestName": "ss_coral_teleconference_new_feauture",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 0,
+      "Number": "156",
+      "Login": "156",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10105,
+      "QParam": 0.5
+    },
+    {
+      "UserId": 1,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10106,
+      "QParam": 0.5
+    },
+    {
+      "UserId": 2,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipGroup": "sip.ab",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10107,
+      "QParam": 1
+    },
+    {
+      "UserId": 3,
+      "Number": "159",
+      "Login": "159",
+      "Password": "123",
+      "SipGroup": "sip.ab",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10108,
+      "QParam": 1
+    }
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/ss/enable {%%0.Number%%-%%3.Number%%} teleconference",
+    "/domain/%%DEV_DOM%%/ss/enable {%%0.Number%%-%%3.Number%%} clip",
+    "/domain/%%DEV_DOM%%/ss/enable {%%0.Number%%-%%3.Number%%} cnip",
+    "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%3.Number%%} clip",
+    "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%3.Number%%} cnip",
+    "/domain/%%DEV_DOM%%/ss/enable {%%0.Number%%-%%3.Number%%} ml"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/ss/deactivate {%%0.Number%%-%%3.Number%%} teleconference",
+    "/domain/%%DEV_DOM%%/ss/disable {%%0.Number%%-%%3.Number%%} teleconference",
+    "/domain/%%DEV_DOM%%/ss/deactivate {%%0.Number%%-%%3.Number%%} clip",
+    "/domain/%%DEV_DOM%%/ss/disable {%%0.Number%%-%%3.Number%%} clip",
+    "/domain/%%DEV_DOM%%/ss/deactivate {%%0.Number%%-%%3.Number%%} cnip",
+    "/domain/%%DEV_DOM%%/ss/disable {%%0.Number%%-%%3.Number%%} cnip",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% chold",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% ctr",
+    "/domain/%%DEV_DOM%%/ss/disable %%0.Number%% chold",
+    "/domain/%%DEV_DOM%%/ss/disable %%0.Number%% ctr",
+    "/domain/%%DEV_DOM%%/ss/deactivate {%%0.Number%%-%%3.Number%%} ml",
+    "/domain/%%DEV_DOM%%/alias/virtual/remove 149",
+    "/domain/%%DEV_DOM%%/teleconference/remove 149"
+  ],
+  "Tests": [
+    {
+      "Name": "creating_a_room_without_specifying_the_number",
+      "Description": "Абонент создает конфу через фиче-код *480* без указания номера. Ожидаем отбой со стороны SSW",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% teleconference",
+            "/domain/%%DEV_DOM%%/ss/enable %%0.Number%% chold ctr",
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% chold",
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% ctr"]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "CREATE_ROOM_*480#",
+              "Commands": [
+                {
+                  "SourceFile": "ss_speed_dial/uac_recv_404.xml",
+                  "Options": "-m 1 -set CDPN *480# -set CDPNDOM %%DEV_DOM%% -d 20000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% teleconference",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% chold",
+            "/domain/%%DEV_DOM%%/ss/disable %%0.Number%% chold",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% ctr",
+            "/domain/%%DEV_DOM%%/ss/disable %%0.Number%% ctr"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "creating_a_room_with_the_same_number",
+      "Description": "Абонент создает конфу через фиче-код *480* с указанием номера. Ставит конфу на удержание и пытается создать эту же конфу. Ожидаем отбитие вызова.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% teleconference",
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% ml line_count=5, line_count_out = 5",
+            "/domain/%%DEV_DOM%%/ss/enable %%0.Number%% chold ctr",
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% chold",
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% ctr"
+            ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "CREATE_ROOM_*480#",
+              "Commands": [
+                {
+                  "SourceFile": "ss_coral_teleconference/uac_call_same_conf.xml",
+                  "Options": "-m 1 -set FIRST_CDPN *480*156# -set SECOND_CDPN *480*156# -set CDPNDOM %%0.SipDomain%% -d 20000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% teleconference",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% ml",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% chold",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% ctr",
+            "/domain/%%DEV_DOM%%/ss/disable %%0.Number%% chold ctr",
+            "/domain/%%DEV_DOM%%/calls/terminate --addr_a %%0.Number%%"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "creating_an_already_created_room",
+      "Description": "Абонент пытается создать конфу, которая создана другими участниками. Ожидаем отбой от SSW.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%2.Number%%} teleconference",
+            "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%1.Number%%} ml line_count=5, line_count_out = 5",
+            "/domain/%%DEV_DOM%%/ss/enable {%%0.Number%%-%%1.Number%%} chold ctr",
+            "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%1.Number%%} chold",
+            "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%1.Number%%} ctr"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "BackGround": true,
+              "Name": "CREATE_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *470*%%1.Number%%# -set CDPNDOM %%DEV_DOM%% -d 7000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "BackGround": true,
+              "Name": "CREATE_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *470*%%2.Number%%# -set CDPNDOM %%DEV_DOM%% -d 7000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sleep": 3
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "CREATE_ROOM_*480#",
+              "Commands": [
+                {
+                  "SourceFile": "ss_coral_teleconference/uac_recv_487.xml",
+                  "Options": "-m 1 -set CDPN *480*%%1.Number%%*%%2.Number%%# -set CDPNDOM %%DEV_DOM%% -d 7000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% teleconference",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% chold",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% ctr",
+            "/domain/%%DEV_DOM%%/ss/disable %%0.Number%% chold ctr"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "creating_a_room_with_2_number",
+      "Description": "Абонент создает конфу через фиче-код *480* c 2 номерами. Ожидаем, что создастся комната с первым номером в фиче-коде.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% teleconference",
+            "/domain/%%DEV_DOM%%/ss/enable %%0.Number%% chold ctr",
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% chold",
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% ctr"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "CREATE_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *480*%%0.Number%%*%%1.Number%%# -set CDPNDOM %%DEV_DOM%% -d 5000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% teleconference",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% chold",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% ctr",
+            "/domain/%%DEV_DOM%%/ss/disable %%0.Number%% chold ctr"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "check_display_name_prefix",
+      "Description": "Проверка параметра display_name_prefix. Ожидаем dname в invite в виде Test156",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%1.Number%%} ml line_count=5, line_count_out = 5",
+            "/domain/%%DEV_DOM%%/teleconference/declare 149",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 caller_id_source initiator",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 auto_collect true",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 display_name_prefix Test",
+            "/domain/%%DEV_DOM%%/teleconference/member-add 149 %%3.Number%%",
+            "/domain/%%DEV_DOM%%/alias/virtual/declare 149 default_routing sip.ab",
+            "/domain/%%DEV_DOM%%/ss/enable 149 teleconference",
+            "/domain/%%DEV_DOM%%/ss/activate 149 teleconference template_from_room = 149",
+            "/domain/%%DEV_DOM%%/ss/enable 149 cfu",
+            "/domain/%%DEV_DOM%%/ss/enable 149 ml",
+            "/domain/%%DEV_DOM%%/ss/activate 149 ml line_count=5, line_count_out = 5",
+            "/domain/%%DEV_DOM%%/ss/activate 149 cfu number = *480*149#"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "BackGround": true,
+              "Name": "CREATE_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN 149 -set CDPNDOM %%DEV_DOM%% -set DISPLAY_NAME 149 -d 7000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "Name": "RECV_ADD_TO_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1 -set CHK_DNAME Test149",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "check_caller_id_source_conference",
+      "Description": "Проверка параметра caller_id_source. Выставляем его в conference. Ожидаем, что вызов на абонентов придет с номера вызывающего абонента.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%1.Number%%} ml line_count=5, line_count_out = 5",
+            "/domain/%%DEV_DOM%%/teleconference/declare 149",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 caller_id_source conference",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 auto_collect true",
+            "/domain/%%DEV_DOM%%/teleconference/member-add 149 %%3.Number%%",
+            "/domain/%%DEV_DOM%%/alias/virtual/declare 149 default_routing sip.ab",
+            "/domain/%%DEV_DOM%%/ss/enable 149 teleconference",
+            "/domain/%%DEV_DOM%%/ss/activate 149 teleconference template_from_room = 149",
+            "/domain/%%DEV_DOM%%/ss/enable 149 cfu",
+            "/domain/%%DEV_DOM%%/ss/activate 149 cfu number = *480*149#",
+            "/domain/%%DEV_DOM%%/ss/enable 149 ml",
+            "/domain/%%DEV_DOM%%/ss/activate 149 ml line_count=5, line_count_out = 5"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "BackGround": true,
+              "Name": "CREATE_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN 149 -set CDPNDOM %%DEV_DOM%% -d 7000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "Name": "RECV_ADD_TO_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1 -set CHK_CGPN 149",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "check_caller_id_source_initiator",
+      "Description": "Проверка параметра caller_id_source. Выставляем его в conference. Ожидаем, что вызов на абонентов придет с номера вызывающего абонента.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%1.Number%%} ml line_count=5, line_count_out = 5",
+            "/domain/%%DEV_DOM%%/teleconference/declare 149",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 caller_id_source initiator",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 auto_collect true",
+            "/domain/%%DEV_DOM%%/teleconference/member-add 149 %%3.Number%%",
+            "/domain/%%DEV_DOM%%/alias/virtual/declare 149 default_routing sip.ab",
+            "/domain/%%DEV_DOM%%/ss/enable 149 teleconference",
+            "/domain/%%DEV_DOM%%/ss/activate 149 teleconference template_from_room = 149",
+            "/domain/%%DEV_DOM%%/ss/enable 149 cfu",
+            "/domain/%%DEV_DOM%%/ss/activate 149 cfu number = *480*149#",
+            "/domain/%%DEV_DOM%%/ss/enable 149 ml",
+            "/domain/%%DEV_DOM%%/ss/activate 149 ml line_count=5, line_count_out = 5"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "BackGround": true,
+              "Name": "CREATE_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN 149 -set CDPNDOM %%DEV_DOM%% -d 7000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "Name": "RECV_ADD_TO_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1 -set CHK_CGPN %%0.Number%%",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "check_destroy_when_only_one_member_left",
+      "Description": "Проверка параметра destroy_when_only_one_member_left. Выставляем его в true. Ожидаем, что конфа разрушится, когда в ней останется 1 участник.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/teleconference/declare 149",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 auto_collect true",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 destroy_when_only_one_member_left true",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 destroy_by_no_initiator false",
+            "/domain/%%DEV_DOM%%/teleconference/member-add 149 %%3.Number%% %%2.Number%% %%1.Number%%",
+            "/domain/%%DEV_DOM%%/alias/virtual/declare 149 default_routing sip.ab",
+            "/domain/%%DEV_DOM%%/ss/enable 149 teleconference",
+            "/domain/%%DEV_DOM%%/ss/activate 149 teleconference template_from_room = 149, destroy_by_no_initiator = false",
+            "/domain/%%DEV_DOM%%/ss/enable 149 cfu",
+            "/domain/%%DEV_DOM%%/ss/activate 149 cfu number = *480*149#",
+            "/domain/%%DEV_DOM%%/ss/enable 149 ml",
+            "/domain/%%DEV_DOM%%/ss/activate 149 ml line_count=5, line_count_out = 5"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "BackGround": true,
+              "Name": "CREATE_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN 149 -set CDPNDOM %%DEV_DOM%% -d 5000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "Name": "RECV_ADD_TO_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "Name": "RECV_ADD_TO_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -d 10000",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "RECV_ADD_TO_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -d 11000",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "check_answer_to_initiator_when_success_outgoing_call_auto_collect_and_member",
+      "Description": "Проверка параметра answer_to_initiator_when_success_outgoing_call. Выставляем auto_collect в false, добавляем member. Ожидаем, что конфа не собирется",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%1.Number%%} ml line_count=5, line_count_out = 5",
+            "/domain/%%DEV_DOM%%/teleconference/declare 149",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 auto_collect false",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 answer_to_initiator_when_success_outgoing_call true",
+            "/domain/%%DEV_DOM%%/teleconference/member-add 149 %%3.Number%%",
+            "/domain/%%DEV_DOM%%/alias/virtual/declare 149 default_routing sip.ab",
+            "/domain/%%DEV_DOM%%/ss/enable 149 teleconference",
+            "/domain/%%DEV_DOM%%/ss/activate 149 teleconference template_from_room = 149",
+            "/domain/%%DEV_DOM%%/ss/enable 149 cfu",
+            "/domain/%%DEV_DOM%%/ss/activate 149 cfu number = *480*149#",
+            "/domain/%%DEV_DOM%%/ss/enable 149 ml",
+            "/domain/%%DEV_DOM%%/ss/activate 149 ml line_count=5, line_count_out = 5"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "BackGround": true,
+              "Name": "CREATE_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN 149 -set CDPNDOM %%DEV_DOM%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "check_answer_to_initiator_when_success_outgoing_call_member",
+      "Description": "Проверка параметра answer_to_initiator_when_success_outgoing_call. Выставляем auto_collect в false. Ожидаем, что конфа не собирется",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%1.Number%%} ml line_count=5, line_count_out = 5",
+            "/domain/%%DEV_DOM%%/teleconference/declare 149",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 answer_to_initiator_when_success_outgoing_call true",
+            "/domain/%%DEV_DOM%%/teleconference/member-add 149 %%3.Number%%",
+            "/domain/%%DEV_DOM%%/alias/virtual/declare 149 default_routing sip.ab",
+            "/domain/%%DEV_DOM%%/ss/enable 149 teleconference",
+            "/domain/%%DEV_DOM%%/ss/activate 149 teleconference template_from_room = 149",
+            "/domain/%%DEV_DOM%%/ss/enable 149 cfu",
+            "/domain/%%DEV_DOM%%/ss/activate 149 cfu number = *480*149#",
+            "/domain/%%DEV_DOM%%/ss/enable 149 ml",
+            "/domain/%%DEV_DOM%%/ss/activate 149 ml line_count=5, line_count_out = 5"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "BackGround": true,
+              "Name": "CREATE_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN 149 -set CDPNDOM %%DEV_DOM%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "check_answer_to_initiator_when_success_outgoing_auto_collect",
+      "Description": "Проверка параметра answer_to_initiator_when_success_outgoing_call. Выставляем auto_collect в false. Ожидаем, что конфа не собирется",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%-%%1.Number%%} ml line_count=5, line_count_out = 5",
+            "/domain/%%DEV_DOM%%/teleconference/declare 149",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 answer_to_initiator_when_success_outgoing_call true",
+            "/domain/%%DEV_DOM%%/teleconference/property-set 149 auto_collect false",
+            "/domain/%%DEV_DOM%%/alias/virtual/declare 149 default_routing sip.ab",
+            "/domain/%%DEV_DOM%%/ss/enable 149 teleconference",
+            "/domain/%%DEV_DOM%%/ss/activate 149 teleconference template_from_room = 149",
+            "/domain/%%DEV_DOM%%/ss/enable 149 cfu",
+            "/domain/%%DEV_DOM%%/ss/activate 149 cfu number = *480*149#",
+            "/domain/%%DEV_DOM%%/ss/enable 149 ml",
+            "/domain/%%DEV_DOM%%/ss/activate 149 ml line_count=5, line_count_out = 5"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "BackGround": true,
+              "Name": "CREATE_ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN 149 -set CDPNDOM %%DEV_DOM%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

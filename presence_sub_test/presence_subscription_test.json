@@ -1,0 +1,368 @@
+{
+  "TestName": "presence_sub_test",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 0,
+      "Number": "156",
+      "Login": "156",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 3600,
+      "SipGroup": "sip.ab",
+      "Port": 10105,
+      "QParam": 0.5
+    },
+    {
+      "UserId": 1,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 3600,
+      "SipGroup": "sip.ab",
+      "Port": 10106,
+      "QParam": 0.5
+    },
+    {
+      "UserId": 2,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 3600,
+      "SipGroup": "sip.ab",
+      "Port": 10107,
+      "QParam": 0.5,
+      "RegMode": "Manual"
+    }
+  ],
+  "UserVar": [
+    {}
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/lists/declare simple_presence_test presence simple_presence_test %%0.Number%% %%1.Number%% %%2.Number%%",
+    "/domain/%%DEV_DOM%%/ss/enable %%1.Number%% presence",
+    "/domain/%%DEV_DOM%%/ss/activate %%1.Number%% presence max_subscribe = 2"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/lists/remove simple_presence_test",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%1.Number%% presence",
+    "/domain/%%DEV_DOM%%/ss/disable %%1.Number%% presence"
+  ],
+  "Tests": [
+    {
+      "Name": "simple_presence_sub_test",
+      "Description": "Тестирование нотификации при precense подписке",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "BackGround": true,
+              "Name": "UAC_SUB_PRECENSE",
+              "Commands": [
+                {
+                  "SourceFile": "presence_sub_test/presence_sub_recv_notify.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%% -aa",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sleep": 2
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAC_SEND_PUBLISH",
+              "Commands": [
+                {
+                  "SourceFile": "presence_sub_test/uac_send_publish.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "subscribe_to_unknown_user",
+      "Description": "Подписка на несуществующего юзера",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "BackGround": true,
+              "Name": "UAC_RECV_404_ON_SUBSCRIBE",
+              "Commands": [
+                {
+                  "SourceFile": "presence_sub_test/presence_sub_recv_404.xml",
+                  "Options": "-m 1 -set CDPN A34892374 -set CDPNDOM %%1.SipDomain%% -aa",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "subscribe_wout_presence_service",
+      "Description": "Получение 403 ответа при деактивированном сервисе presence.",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAC_RECV_403_ON_SUBSCRIBE",
+              "Commands": [
+                {
+                  "SourceFile": "presence_sub_test/presence_sub_recv_403.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%% -aa",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "check_reg_unreg_notification",
+      "Description": "Проверка получения нотификаций при регистрации/разрегистрации юзера",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "BackGround": true,
+              "Name": "UAC_RECV_PRE_NOTIFY",
+              "Commands": [
+                {
+                  "SourceFile": "presence_sub_test/presence_sub_reg_unreg_notifications.xml",
+                  "Options": "-m 1 -set CDPN %%2.Number%% -set CDPNDOM %%2.SipDomain%% -aa",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sleep": 4
+        },
+        {
+          "ManualReg": {
+            "Users": {
+              "2": {
+                "script": "register_test/success_registration_with_auth.xml"
+              }
+            }
+          }
+        },
+        {
+          "Sleep": 1
+        },
+        {
+          "DropManualReg": {
+            "Users": [
+              "2"
+            ]
+          }
+        },
+        {
+          "ManualReg": {
+            "Users": {
+              "2": {
+                "script": "register_test/success_registration_with_auth.xml"
+              }
+            }
+          }
+        },
+        {
+          "Sleep": 1
+        },
+        {
+          "DropManualReg": {
+            "Users": [
+              "2"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Name": "send_481_on_precense_notify_test",
+      "Description": "Проверка отсутствия нотификаций после отправки 481 ответа на NOTIFY",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "BackGround": true,
+              "Name": "UAC_SEND_481_ON_NOTIFY",
+              "Commands": [
+                {
+                  "SourceFile": "presence_sub_test/presence_sub_send_481_to_notify.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%% -aa",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sleep": 2
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAC_SEND_PUBLISH",
+              "Commands": [
+                {
+                  "SourceFile": "presence_sub_test/uac_send_publish.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sleep": 7
+        }
+      ]
+    },
+    {
+      "Name": "test_retrans_401_on_publish",
+      "Description": "Проверяем повтор 401 ответа в случае перепосылок PUBLISH без авторизации",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "BackGround": true,
+              "Name": "UAC_SUB_PRECENSE",
+              "Commands": [
+                {
+                  "SourceFile": "presence_sub_test/presence_sub_recv_notify.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%% -aa",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sleep": 2
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAC_PUB_401_RETRANS",
+              "Commands": [
+                {
+                  "SourceFile": "presence_sub_test/uac_pub_retrans_401.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%% -nr",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_retrans_200_on_publish",
+      "Description": "Проверяем повтор 200 ответа в случае перепосылок PUBLISH с авторизации",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "BackGround": true,
+              "Name": "UAC_SUB_PRECENSE",
+              "Commands": [
+                {
+                  "SourceFile": "presence_sub_test/presence_sub_recv_notify.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%% -aa",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sleep": 2
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "Name": "UAC_PUB_200_RETRANS",
+              "Commands": [
+                {
+                  "SourceFile": "presence_sub_test/uac_pub_retrans_200.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%% -nr",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "60s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

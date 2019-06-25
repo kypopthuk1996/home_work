@@ -1,0 +1,111 @@
+{
+  "TestName": "rfc3262",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 0,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 11001,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    },
+    {
+      "UserId": 1,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 11002,
+      "SipGroup": "sip.ab",
+      "QParam": 1
+    }
+  ],
+  "UserVar": [
+    {}
+  ],
+  "PreConf": [],
+  "PostConf": [],
+  "Tests": [
+    {
+      "Name": "prack_and_cancel_race_test",
+      "Description": "Проверка корректности обработки гонок CANCEL и промежуточного ответа с req100rel",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAS_RACE_CANCEL_AND_180_REQ100REL",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3262/uas_prack_and_cancel_race.xml",
+                  "Options": "-m 1 -nr",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "100s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAC_SEND_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_cancel.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "100s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "complete_invite_transaction_before_prack",
+      "Description": "Проверка корректности завершения вызова на адаптере в случае, когда финальный не-2xx ответ приходит до подтверждения PRACK запроса. А звонит на Б, Б отвечает 183 с Require: 100rel, получает PRACK, отправляет 503 ответ на INVITE транзакцию и после подтверждает PRACK. Ожидается, что вызов на адаптере будет завершён. В случае неуспешности на адаптере появится ошибка heartbeat timeout. ",
+      "TestProcedure": [
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAS_COMPLETE_INVITE_BEFORE_PRACK",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3262/complete_invite_transaction_before_prack.xml",
+                  "Options": "-m 1 -nr",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "100s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAC_RECV_503",
+              "Commands": [
+                {
+                  "SourceFile": "rfc3262/uac_recv_503.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "100s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

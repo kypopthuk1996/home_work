@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+<scenario name = "Simple UAS recv BYE req100rel">
+
+<Global variables="CHK_DNAME,CHK_CGPN" />
+<User variables="chk_dname,chk_cgpn,dummy,dname,100rel" />
+<Reference variables="dummy,dname"/>
+
+
+<nop hide="true" condexec="CHK_DNAME">
+    <action>
+        <assignstr assign_to="chk_dname" value="[$CHK_DNAME]"/>
+    </action>
+</nop>
+
+<nop hide="true" condexec="CHK_CGPN">
+    <action>
+        <assignstr assign_to="chk_cgpn" value="[$CHK_CGPN]"/>
+    </action>
+</nop>
+
+<recv request="INVITE">
+<action>
+	<ereg regexp="\s?\"?([^\"]+)\"?\s+<sip:" search_in="hdr" header="From:" assign_to="dummy,dname" />
+	<ereg regexp="(\w)*@" search_in="hdr" header="To:" assign_to="number" />
+	<ereg regexp=".*" search_in="hdr" header="From:" assign_to="inv_from" />
+	<ereg regexp=".*" search_in="hdr" header="To:" assign_to="inv_to" />
+	<ereg regexp=".*" search_in="hdr" header="Call-ID:" assign_to="inv_call_id" />
+	<ereg regexp=".*" search_in="hdr" header="Via:" assign_to="inv_via" />
+	<ereg regexp="[0-9]+" search_in="hdr" header="CSeq:" assign_to="inv_cseq" />
+	<assignstr assign_to="local_tag" value="[call_number][pid]"/>
+    <ereg regexp="sip:([^@]@)?[^>]+" search_in="hdr" header="Contact:" check_it="true" assign_to="contact"/>
+    <ereg regexp="<sip:([^;@]+)" search_in="hdr" header="To:" check_it="true" assign_to="dummy,local_number"/>
+    <ereg regexp="<sip:([^;@]+)" search_in="hdr" header="From:" check_it="true" assign_to="dummy,remote_number"/>
+    <ereg regexp="<sip:([^;@]+)" search_in="hdr" header="To:" check_it="true" assign_to="dummy,local_number"/>
+    <ereg regexp=";tag=(\w+)" search_in="hdr" header="From:" check_it="true" assign_to="dummy,remote_tag" />
+    <ereg regexp="<sip:.*@([^;>]+)" search_in="hdr" header="To:" check_it="true" assign_to="dummy,local_domain" />
+    <ereg regexp="100rel" search_in="hdr" header="Supported:" check_it="true" assign_to="100rel" />
+    <ereg regexp="<sip:.*@([^;>]+)" search_in="hdr" header="From:" check_it="true" assign_to="dummy,remote_domain" />
+</action>
+</recv>
+
+<!-- checking that 100rel is supported -->
+<nop condexec="100rel" condexec_inverse="true">
+    <action>
+        <warning message="Recieved INVITE not contain Supported header with 100rel"/>
+        <exec int_cmd="stop_now"/>
+    </action>
+</nop>
+
+<send>
+<![CDATA[
+	SIP/2.0 100 Trying
+	[last_Via:]
+	[last_From:]
+	[last_To:]
+	[last_Call-ID:]
+	[last_CSeq:]
+	Content-Length: 0
+]]>
+</send>
+
+<send>
+<![CDATA[
+	SIP/2.0 180 Ringing
+	[last_Via:]
+	[last_From:]
+	[last_To:];tag=[$local_tag]
+	[last_Call-ID:]
+	[last_CSeq:]
+	Require: 100rel
+	Rseq: [cseq]
+	Contact: <sip:[$number][local_ip]:[local_port]>
+	Content-Type: application/sdp
+	Content-Length: [len]
+
+	v=0
+	o=tester 123456 654321 IN IP[local_ip_type] [local_ip]
+	s=A conversation
+	c=IN IP[local_ip_type] [local_ip]
+	t=0 0
+	m=audio [auto_media_port] RTP/AVP 8
+	a=rtpmap:8 PCMA/8000
+]]>
+</send>
+
+
+<recv request="PRACK"></recv>
+
+<send>
+<![CDATA[
+	SIP/2.0 200 OK
+	[last_Via:]
+	[last_From:]
+	[last_To:]
+	[last_Call-ID:]
+	[last_CSeq:]
+	Content-Length: 0
+]]>
+</send>
+
+
+<pause milliseconds="1100"/>
+
+<send retrans="500">
+<![CDATA[
+	SIP/2.0 200 OK
+	Via:[$inv_via]
+	From:[$inv_from]
+	To:[$inv_to];tag=[$local_tag]
+	Call-ID:[$inv_call_id]
+	CSeq: [$inv_cseq] INVITE
+	Contact: <sip:[$number][local_ip]:[local_port];user=phone>
+	Content-Length: 0
+]]>
+</send>
+
+
+<recv request="ACK"></recv>
+<pause/>
+
+
+<send>
+<![CDATA[
+    BYE [$contact] SIP/2.0
+    Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+    From: <sip:[$local_number]@[$local_domain]>;tag=[$local_tag]
+    To: <sip:[$remote_number]@[$remote_domain]>;tag=[$remote_tag]
+    [last_call-id]
+    CSeq: [cseq] BYE
+    Contact: <sip:[$local_number]@[local_ip]:[local_port]>
+    Max-Forwards: 70
+    Content-Length: 0
+]]>
+</send>
+
+<recv response="200"></recv>
+<pause milliseconds="2000"/>
+
+<nop hide="true" condexec="CHK_DNAME">
+    <action>
+        <strcmp assign_to="compare_result" variable="chk_dname" variable2="dname"/>
+    </action>
+</nop>
+
+<nop hide="true" condexec="compare_result">
+    <action>
+    	<warning message="Check DName failed. chk_dname: [$chk_dname]; dname: [$dname]; compare_result: [$compare_result]"/>
+        <exec int_cmd="stop_now"/>
+    </action>
+</nop>
+
+<nop hide="true" condexec="CHK_CGPN">
+    <action>
+        <strcmp assign_to="compare_result" variable="chk_cgpn" variable2="remote_number"/>
+    </action>
+</nop>
+
+<nop hide="true" condexec="compare_result">
+    <action>
+        <warning message="Check number failed. chk_cgpn: [$chk_cgpn]; number: [$remote_number]; compare_result: [$compare_result]"/>
+        <exec int_cmd="stop_now"/>
+    </action>
+</nop>
+	
+</scenario>

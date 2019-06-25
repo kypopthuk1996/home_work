@@ -1,0 +1,351 @@
+{
+  "TestName": "black_list_trunk_test",
+  "AutoTest": true,
+  "Trunks": [
+    {
+      "TrunkId": 1,
+      "TrunkName": "black_list_trunk_1",
+      "Port": 5094,
+      "SipDomain": "%%DEV_DOM%%",
+      "SipGroup": "black_list_trunk_gr"
+    },
+    {
+      "TrunkId": 2,
+      "TrunkName": "black_list_trunk_2",
+      "Port": 5095,
+      "SipDomain": "%%DEV_DOM%%",
+      "SipGroup": "black_list_trunk_gr"
+    }
+  ],
+  "UserVar": [
+    {
+      "%%to_trunk1_ctx%%": "PGNvbnRleHQgeG1sbnM6eHM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNlIiB4czpub05hbWVzcGFjZVNjaGVtYUxvY2F0aW9uPSJlY3NzX3JvdXRpbmcueHNkIiBuYW1lPSJjdHhfdHJ1bmtfYmxhY2tfbGlzdF8xIiBkaWdpdG1hcD0iKCpbMC05Kl1bMC05Kl0uI3wjWzAtOSpdWzAtOSpdLiN8KiNbMC05Kl1bMC05Kl0uI3wxeHgufDEweHguKSI+CiAgPHJ1bGUgbmFtZT0icnVsZTEiPgogICAgPGNvbmRpdGlvbnM+CiAgICAgIDxmaW5hbCB2YWx1ZT0idHJ1ZSIvPgogICAgICA8Y2RwbiBkaWdpdHM9IiUiLz4KICAgIDwvY29uZGl0aW9ucz4KICAgIDxyZXN1bHQ+CiAgICAgIDxleHRlcm5hbD4KICAgICAgICA8dHJ1bmsgdmFsdWU9ImJsYWNrX2xpc3RfdHJ1bmtfMSIvPgogICAgICA8L2V4dGVybmFsPgogICAgPC9yZXN1bHQ+CiAgPC9ydWxlPgo8L2NvbnRleHQ+",
+      "%%to_trunk2_ctx%%": "PGNvbnRleHQgeG1sbnM6eHM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNlIiB4czpub05hbWVzcGFjZVNjaGVtYUxvY2F0aW9uPSJlY3NzX3JvdXRpbmcueHNkIiBuYW1lPSJjdHhfdHJ1bmtfYmxhY2tfbGlzdF8yIiBkaWdpdG1hcD0iKCpbMC05Kl1bMC05Kl0uI3wjWzAtOSpdWzAtOSpdLiN8KiNbMC05Kl1bMC05Kl0uI3wxeHgufDEweHguKSI+CiAgPHJ1bGUgbmFtZT0icnVsZTEiPgogICAgPGNvbmRpdGlvbnM+CiAgICAgIDxmaW5hbCB2YWx1ZT0idHJ1ZSIvPgogICAgICA8Y2RwbiBkaWdpdHM9IiUiLz4KICAgIDwvY29uZGl0aW9ucz4KICAgIDxyZXN1bHQ+CiAgICAgIDxleHRlcm5hbD4KICAgICAgICA8dHJ1bmsgdmFsdWU9ImJsYWNrX2xpc3RfdHJ1bmtfMiIvPgogICAgICA8L2V4dGVybmFsPgogICAgPC9yZXN1bHQ+CiAgPC9ydWxlPgo8L2NvbnRleHQ+",
+      "%%trunk1_ctx_name%%": "ctx_trunk_black_list_2",
+      "%%trunk2_ctx_name%%": "ctx_trunk_black_list_1",
+      "%%black_num_1%%": "80008458100",
+      "%%black_num_2%%": "80008458101",
+      "%%black_num_3%%": "80008458102",
+      "%%white_number%%": "80008458200",
+      "%%dummy_number%%": "80014534534"
+    }
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/routing/.xbin/.import-context --xml-base64 %%to_trunk2_ctx%%",
+    "/domain/%%DEV_DOM%%/routing/.xbin/.import-context --xml-base64 %%to_trunk1_ctx%%",
+    "/domain/%%DEV_DOM%%/trunk/sip/declare %%trunk1_ctx_name%% %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% %%SSW_IPSET%% static %%IP%% %%Tr.1.Port%% sip-proxy %%EXTER_PORT%%",
+    "/domain/%%DEV_DOM%%/trunk/sip/declare %%trunk2_ctx_name%% %%Tr.2.SipGroup%% %%Tr.2.TrunkName%% %%SSW_IPSET%% static %%IP%% %%Tr.2.Port%% sip-proxy %%EXTER_PORT%%",
+    "/domain/%%DEV_DOM%%/lists/declare black_list_for_trunk default black_list_for_trunk %%black_num_1%% %%black_num_2%% %%black_num_3%%"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/trunk/sip/remove %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% --force",
+    "/domain/%%DEV_DOM%%/trunk/sip/remove %%Tr.2.SipGroup%% %%Tr.2.TrunkName%% --force",
+    "/domain/%%DEV_DOM%%/routing/delete %%trunk1_ctx_name%%",
+    "/domain/%%DEV_DOM%%/routing/delete %%trunk2_ctx_name%%",
+    "/domain/%%DEV_DOM%%/lists/remove black_list_for_trunk"
+  ],
+  "Tests": [
+    {
+      "Name": "test_blacklist_for_incoming_calls",
+      "Description": "Проверка работы blacklist для входящих вызовов. Устанавливаем на транк blacklist для входящих вызовов. Делаем несколько входящих вызовов с запрещённых номеров. Ожидается, что вызовы будут отбиты 403 ответом. Далее делаем исходящий вызов с запрещённого номера. Ожидается, что вызовов пройдет успешно. Далее делаем входящий вызов с незапрещённого номера. Ожидается, что вызов пройдет успешно. Далее отключаем blacklist и делаем входящий вызов с запрещённого номера. Ожидается, что вызовов пройдет успешно.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/trunk/set %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% black_list\\in black_list_for_trunk",
+            "/domain/%%DEV_DOM%%/trunk/set %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% black_list\\in\\enabled true"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "WriteStat": true,
+              "Name": "UAC_SEND_CALL_FROM_BANNED_NUMBERS",
+              "Commands": [
+                {
+                  "SourceFile": "black_and_white_lists/uac_recv_403.xml",
+                  "Options": "-m 1 -set CDPN %%dummy_number%% -set CDPNDOM %%Tr.1.SipDomain%% -set CGPN %%black_num_1%% -set CGPNDOM %%Tr.2.SipDomain%% -d 2000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                },
+                {
+                  "SourceFile": "black_and_white_lists/uac_recv_403.xml",
+                  "Options": "-m 1 -set CDPN %%dummy_number%% -set CDPNDOM %%Tr.1.SipDomain%% -set CGPN %%black_num_3%% -set CGPNDOM %%Tr.2.SipDomain%% -d 2000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "WriteStat": true,
+              "Name": "UAS_RECV_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -d 3000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "Trunk",
+              "TrunkId": 2,
+              "WriteStat": true,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%dummy_number%% -set CDPNDOM %%Tr.1.SipDomain%% -set CGPN %%black_num_2%% -set CGPNDOM %%Tr.2.SipDomain%% -d 1000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "Trunk",
+              "TrunkId": 2,
+              "WriteStat": true,
+              "Name": "UAS_RECV_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -d 3000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "WriteStat": true,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%dummy_number%% -set CDPNDOM %%Tr.1.SipDomain%% -set CGPN %%white_number%% -set CGPNDOM %%Tr.2.SipDomain%% -d 1000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/trunk/set %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% black_list\\in\\enabled false"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "Trunk",
+              "TrunkId": 2,
+              "WriteStat": true,
+              "Name": "UAS_RECV_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -d 3000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "WriteStat": true,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%dummy_number%% -set CDPNDOM %%Tr.1.SipDomain%% -set CGPN %%black_num_3%% -set CGPNDOM %%Tr.2.SipDomain%% -d 1000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/trunk/clean %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% black_list\\in",
+            "/domain/%%DEV_DOM%%/trunk/clean %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% black_list\\in\\enabled"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_blacklist_for_outgoing_calls",
+      "Description": "Проверка работы blacklist для исходящих вызовов. Устанавливаем на транк blacklist для исходящих вызовов. Делаем несколько исходящих вызовов с запрещённых номеров. Ожидается, что вызовы будут отбиты 403 ответом. Далее делаем входящий вызов с запрещённого номера. Ожидается, что вызовов пройдет успешно. Далее делаем исходящий вызов с незапрещённого номера. Ожидается, что вызов пройдет успешно. Далее отключаем blacklist и делаем исходящий вызов с запрещённого номера. Ожидается, что вызовов пройдет успешно.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/trunk/set %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% black_list\\out black_list_for_trunk",
+            "/domain/%%DEV_DOM%%/trunk/set %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% black_list\\out\\enabled true"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "Trunk",
+              "TrunkId": 2,
+              "WriteStat": true,
+              "Name": "UAC_SEND_CALL_FROM_BANNED_NUMBERS",
+              "Commands": [
+                {
+                  "SourceFile": "black_and_white_lists/uac_recv_403.xml",
+                  "Options": "-m 1 -set CDPN %%dummy_number%% -set CDPNDOM %%Tr.1.SipDomain%% -set CGPN %%black_num_1%% -set CGPNDOM %%Tr.2.SipDomain%% -d 2000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                },
+                {
+                  "SourceFile": "black_and_white_lists/uac_recv_403.xml",
+                  "Options": "-m 1 -set CDPN %%dummy_number%% -set CDPNDOM %%Tr.1.SipDomain%% -set CGPN %%black_num_3%% -set CGPNDOM %%Tr.2.SipDomain%% -d 2000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "Trunk",
+              "TrunkId": 2,
+              "WriteStat": true,
+              "Name": "UAS_RECV_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -d 3000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "WriteStat": true,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%dummy_number%% -set CDPNDOM %%Tr.1.SipDomain%% -set CGPN %%black_num_1%% -set CGPNDOM %%Tr.2.SipDomain%% -d 1000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "WriteStat": true,
+              "Name": "UAS_RECV_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -d 3000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "Trunk",
+              "TrunkId": 2,
+              "WriteStat": true,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%dummy_number%% -set CDPNDOM %%Tr.1.SipDomain%% -set CGPN %%white_number%% -set CGPNDOM %%Tr.2.SipDomain%% -d 1000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/trunk/set %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% black_list\\out\\enabled false"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "WriteStat": true,
+              "Name": "UAS_RECV_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -d 3000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "Trunk",
+              "TrunkId": 2,
+              "WriteStat": true,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%dummy_number%% -set CDPNDOM %%Tr.1.SipDomain%% -set CGPN %%black_num_1%% -set CGPNDOM %%Tr.2.SipDomain%% -d 1000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/trunk/clean %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% black_list\\in",
+            "/domain/%%DEV_DOM%%/trunk/clean %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% black_list\\in\\enabled"
+          ]
+        }
+      ]
+    }
+  ]
+}

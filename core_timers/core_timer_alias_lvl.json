@@ -1,0 +1,342 @@
+{
+  "TestName": "core_timer_alias_lvl",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 1,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10106,
+      "QParam": 0.5
+    },
+    {
+      "UserId": 2,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipGroup": "sip.ab",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10107,
+      "QParam": 1
+    }
+  ],
+  "UserVar": [
+    {}
+  ],
+  "PreConf": [
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/alias/clean %%2.Number%% %%2.SipGroup%% %%2.Number%%@%%2.SipDomain%% conversation_timeout",
+    "/domain/%%DEV_DOM%%/alias/clean %%1.Number%% %%1.SipGroup%% %%1.Number%%@%%1.SipDomain%% conversation_timeout",
+    "/domain/%%DEV_DOM%%/alias/clean %%1.Number%% %%1.SipGroup%% %%1.Number%%@%%1.SipDomain%% no_answer_timeout",
+    "/domain/%%DEV_DOM%%/alias/clean %%1.Number%% %%1.SipGroup%% %%1.Number%%@%%1.SipDomain%% no_answer_timeout"
+
+  ],
+  "Tests": [
+    {
+      "Name": "conversation_timeout_test_a_side",
+      "Description": "Проверка таймера conversation_timeout для стороны А. Устанавливаем таймер conversation_timeout на уровне alias абонента А. Делаем вызов с А на Б, отвечаем. Ожидается, что вызов будет отбит по истечению таймера conversation_timeout.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/alias/set %%2.Number%% %%2.SipGroup%% %%2.Number%%@%%2.SipDomain%% conversation_timeout 5s"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "NeedAuth": true,
+              "WriteStat": true,
+              "Name": "UAS_RECV_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_bye.xml",
+                  "Options": "-m 1",
+                  "NeedAuth": true,
+                  "SippType": "uas",
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "NeedAuth": true,
+              "Name": "UAC_RECV_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "NeedAuth": true,
+                  "SippType": "uac",
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "CheckDifference": [
+            {
+              "Difference": 5000,
+              "MaxError": 0.5,
+              "CompareMode": "inside_ua",
+              "SearchMode": "inside_call",
+              "UA": "user:1,user:2",
+              "Msg": [
+                {
+                  "MsgType": "response",
+                  "Method": "INVITE",
+                  "Code": 200
+                },
+                {
+                  "MsgType": "request",
+                  "Method": "BYE",
+                  "Code": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/alias/clean %%2.Number%% %%2.SipGroup%% %%2.Number%%@%%2.SipDomain%% conversation_timeout"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "conversation_timeout_test_b_side",
+      "Description": "Проверка таймера conversation_timeout для стороны Б. Устанавливаем таймер conversation_timeout на уровне alias абонента Б. Делаем вызов с А на Б, отвечаем. Ожидается, что вызов не будет отбит по истечению таймера conversation_timeout.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/alias/set %%1.Number%% %%1.SipGroup%% %%1.Number%%@%%1.SipDomain%% conversation_timeout 5s"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "NeedAuth": true,
+              "WriteStat": true,
+              "Name": "UAS_SEND_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -d 7000",
+                  "NeedAuth": true,
+                  "SippType": "uas",
+                  "Timeout": "15s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "NeedAuth": true,
+              "Name": "UAC_RECV_BYE",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%% -d 5000",
+                  "NeedAuth": true,
+                  "SippType": "uac",
+                  "Timeout": "15s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "CheckDifference": [
+            {
+              "Difference": 7000,
+              "MaxError": 0.5,
+              "CompareMode": "inside_ua",
+              "SearchMode": "inside_call",
+              "UA": "user:1,user:2",
+              "Msg": [
+                {
+                  "MsgType": "response",
+                  "Method": "INVITE",
+                  "Code": 200
+                },
+                {
+                  "MsgType": "request",
+                  "Method": "BYE",
+                  "Code": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/alias/clean %%1.Number%% %%1.SipGroup%% %%1.Number%%@%%1.SipDomain%% conversation_timeout"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "no_answer_timeout_test_a_side",
+      "Description": "Проверка таймера no_answer_timeout, установленного на абоненте А. Устанавливаем таймер no_answer_timeout на уровне alias абонента А. Делаем вызов с А на Б, Б не отвечает на вызов. Ожидается, что вызов не будет отменён по истечению таймера no_answer_timeout.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/alias/set %%2.Number%% %%2.SipGroup%% %%2.Number%%@%%2.SipDomain%% no_answer_timeout 4s"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "NeedAuth": true,
+              "Name": "UAS_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "NeedAuth": true,
+                  "SippType": "uas",
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "NeedAuth": true,
+              "Name": "UAC_SEND_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_cancel.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%% -d 6000",
+                  "NeedAuth": true,
+                  "SippType": "uac",
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "CheckDifference": [
+            {
+              "Difference": 6000,
+              "MaxError": 0.5,
+              "CompareMode": "inside_ua",
+              "SearchMode": "inside_call",
+              "UA": "user:1",
+              "Msg": [
+                {
+                  "MsgType": "response",
+                  "Method": "INVITE",
+                  "Code": 180
+                },
+                {
+                  "MsgType": "request",
+                  "Method": "CANCEL",
+                  "Code": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/alias/clean %%2.Number%% %%2.SipGroup%% %%2.Number%%@%%2.SipDomain%% no_answer_timeout"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "no_answer_timeout_test_b_side",
+      "Description": "Проверка таймера no_answer_timeout, установленного на абоненте Б. Устанавливаем таймер no_answer_timeout на уровне alias абонента Б. Делаем вызов с А на Б, Б не отвечает на вызов. Ожидается, что вызов будет отменён по истечению таймера no_answer_timeout.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/alias/set %%1.Number%% %%1.SipGroup%% %%1.Number%%@%%1.SipDomain%% no_answer_timeout 4s"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "NeedAuth": true,
+              "Name": "UAS_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "NeedAuth": true,
+                  "SippType": "uas",
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "NeedAuth": true,
+              "Name": "UAC_RECV_480",
+              "Commands": [
+                {
+                  "SourceFile": "core_timers/uac_recv_480.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%1.SipDomain%%",
+                  "NeedAuth": true,
+                  "SippType": "uac",
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "CheckDifference": [
+            {
+              "Difference": 4000,
+              "MaxError": 0.5,
+              "CompareMode": "inside_ua",
+              "SearchMode": "inside_call",
+              "UA": "user:1",
+              "Msg": [
+                {
+                  "MsgType": "response",
+                  "Method": "INVITE",
+                  "Code": 180
+                },
+                {
+                  "MsgType": "request",
+                  "Method": "CANCEL",
+                  "Code": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/alias/clean %%1.Number%% %%1.SipGroup%% %%1.Number%%@%%1.SipDomain%% no_answer_timeout"
+          ]
+        }
+      ]
+    }
+  ]
+}

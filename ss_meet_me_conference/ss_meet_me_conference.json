@@ -1,0 +1,485 @@
+{
+  "TestName": "ss_meet_me_conference",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 0,
+      "Number": "156",
+      "Login": "156",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10105,
+      "QParam": 0.5
+    },
+    {
+      "UserId": 1,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10106,
+      "QParam": 0.5
+    },
+    {
+      "UserId": 2,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipGroup": "sip.ab",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 10107,
+      "QParam": 1
+    }
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/ss/enable %%0.Number%% meet_me_conference",
+    "/domain/%%DEV_DOM%%/ss/enable %%1.Number%% meet_me_conference",
+    "/domain/%%DEV_DOM%%/ss/enable %%2.Number%% meet_me_conference"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% meet_me_conference",
+    "/domain/%%DEV_DOM%%/ss/disable %%0.Number%% meet_me_conference",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%1.Number%% meet_me_conference",
+    "/domain/%%DEV_DOM%%/ss/disable %%1.Number%% meet_me_conference",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%2.Number%% meet_me_conference",
+    "/domain/%%DEV_DOM%%/ss/disable %%2.Number%% meet_me_conference"
+  ],
+  "Tests": [
+    {
+      "Name": "create_conf-room_use_short_feature_code(room_number_not_set)",
+      "Description": "Абоненты Master и Member не имеют заданой комнаты, оба создают комнаты неполным feature-кодом. У Master комната создается успешно, у Member НЕ создается. Абонент Б успешно заходится в комнату Master'а.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% meet_me_conference mode = master",
+            "/domain/%%DEV_DOM%%/ss/activate %%1.Number%% meet_me_conference mode = member"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "BackGround": true,
+              "Name": "CREATE_CONF-ROOM_MASTER",
+              "Commands": [
+                {
+                  "SourceFile": "ss_meet_me_conference/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *270# -set CDPNDOM %%DEV_DOM%% -d 5000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sleep": 3
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "CREATE_CONF-ROOM_MEMBER",
+              "Commands": [
+                {
+                  "SourceFile": "ss_meet_me_conference/uac_recv_480.xml",
+                  "Options": "-m 1 -set CDPN *270# -set CDPNDOM %%DEV_DOM%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+               {
+              "Type": "User",
+              "UserId": 2,
+              "Name": "CALL_CONF-ROOM_MASTER",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *271*%%0.Number%%# -set CDPNDOM %%DEV_DOM%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% meet_me_conference",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%1.Number%% meet_me_conference"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "create_conf-room_use_full_feature_code",
+      "Description": "Master создает комнату при помощи полного feature-кода. Комната создается. Member пытается создать комнату полным feature-кодом. Комната НЕ создается. Абонент Б создает комнату. Комната НЕ создается.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% meet_me_conference mode = master",
+            "/domain/%%DEV_DOM%%/ss/activate %%1.Number%% meet_me_conference mode = member"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "CREATE_CONF-ROOM_MASTER",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *270*%%0.Number%%# -set CDPNDOM %%DEV_DOM%% -d 5000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "CREATE_CONF-ROOM_MEMBER",
+              "Commands": [
+                {
+                  "SourceFile": "ss_meet_me_conference/uac_recv_480.xml",
+                  "Options": "-m 1 -set CDPN *270*%%1.Number%%# -set CDPNDOM %%DEV_DOM%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 2,
+              "Name": "CREATE_CONF-ROOM_ANY_USER",
+              "Commands": [
+                {
+                  "SourceFile": "ss_meet_me_conference/uac_recv_480.xml",
+                  "Options": "-m 1 -set CDPN *270*%%2.Number%%# -set CDPNDOM %%DEV_DOM%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% meet_me_conference",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%1.Number%% meet_me_conference"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "call_to_member_if_room_number_set",
+      "Description": "Абонент Member имеет заданный номер комнаты. Абонент Б звонит на Member. Абонент Б попадает в комнату с заданым номером комнаты Member",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% meet_me_conference mode = master",
+            "/domain/%%DEV_DOM%%/ss/activate %%1.Number%% meet_me_conference mode = member, room_number = 600"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "BackGround": true,
+              "Name": "CREATE_CONF-ROOM_MASTER",
+              "Commands": [
+                {
+                  "SourceFile": "ss_meet_me_conference/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *270*600# -set CDPNDOM %%DEV_DOM%% -d 5000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sleep": 1
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 2,
+              "Name": "CALL_TO_MEMBER",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%DEV_DOM%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% meet_me_conference",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%1.Number%% meet_me_conference"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "duplication_of_the_room_if_room_number_set",
+      "Description": "Master создает комнату, используя полный feature-код. Комната создается. Другой Master создает комнату с тем же номером. Комната НЕ создается.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% meet_me_conference mode = master",
+            "/domain/%%DEV_DOM%%/ss/activate %%1.Number%% meet_me_conference mode = master"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "CREATE_CONF-ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "ss_meet_me_conference/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *270*333# -set CDPNDOM %%DEV_DOM%% -d 5000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "CREATE_DUPLICATION_CONF-ROOM",
+              "Commands": [
+                {
+                  "SourceFile": "ss_meet_me_conference/uac_recv_487.xml",
+                  "Options": "-m 1 -set CDPN *270*333# -set CDPNDOM %%DEV_DOM%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% meet_me_conference",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%1.Number%% meet_me_conference"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "create_conf-room_use_short_feature_code_if_room_number_set",
+      "Description": "Номер комнаты для Master и Member задан. Master создает комнату, используя неполный feature-код. Комната создается. Member создает комнату неполным feature-кодом. Комната НЕ создается. Абонент Б входит в комнату Master. Вход успешен",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% meet_me_conference mode = master, room_number = 500",
+            "/domain/%%DEV_DOM%%/ss/activate %%1.Number%% meet_me_conference mode = member, room_number = 500"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "BackGround": true,
+              "UserId": 0,
+              "Name": "CREATE_CONF-ROOM_MASTER",
+              "Commands": [
+                {
+                  "SourceFile": "ss_meet_me_conference/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *270# -set CDPNDOM %%DEV_DOM%% -d 8000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "CREATE_CONF-ROOM_MEMBER",
+              "Commands": [
+                {
+                  "SourceFile": "ss_meet_me_conference/uac_recv_480.xml",
+                  "Options": "-m 1 -set CDPN *270# -set CDPNDOM %%DEV_DOM%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "StartUA": [
+               {
+              "Type": "User",
+              "UserId": 2,
+              "Name": "CALL_CONF-ROOM_MASTER",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *271*500# -set CDPNDOM %%DEV_DOM%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% meet_me_conference",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%1.Number%% meet_me_conference"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "enter_any_user_in_room_use_short_feature-code",
+      "Description": "Master создал комнату. Абонент Б входит в комнату по неполному feature-коду. Вход в комнату со своим номером успешен.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% meet_me_conference mode = master"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "BackGround": true,
+              "Name": "CREATE_CONF-ROOM_MASTER",
+              "Commands": [
+                {
+                  "SourceFile": "ss_meet_me_conference/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *270*%%2.Number%%# -set CDPNDOM %%DEV_DOM%% -d 5000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sleep": 1
+        },
+        {
+          "StartUA": [
+               {
+              "Type": "User",
+              "UserId": 2,
+              "Name": "CALL_CONF-ROOM_ANY_USER",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *271# -set CDPNDOM %%DEV_DOM%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% meet_me_conference"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "call_to_member_if_room_number_not_set",
+      "Description": "Абонент Member не имеет номер комнаты. Абонент Б звонит на Member. Абонент Б успешно входит в комнату с номером Member.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% meet_me_conference mode = master",
+            "/domain/%%DEV_DOM%%/ss/activate %%1.Number%% meet_me_conference mode = member"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "BackGround": true,
+              "Name": "CREATE_CONF-ROOM_MASTER",
+              "Commands": [
+                {
+                  "SourceFile": "ss_meet_me_conference/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *270*%%1.Number%%# -set CDPNDOM %%DEV_DOM%% -d 5000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sleep": 3
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 2,
+              "Name": "CALL_TO_MEMBER",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN %%1.Number%% -set CDPNDOM %%DEV_DOM%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "30s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% meet_me_conference",
+            "/domain/%%DEV_DOM%%/ss/deactivate %%1.Number%% meet_me_conference"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,376 @@
+{
+  "TestName": "number_plan",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 0,
+      "Number": "156",
+      "Login": "156",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10110,
+      "QParam": 0.5
+    },
+    {
+      "UserId": 1,
+      "Number": "157",
+      "Login": "157",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10116,
+      "QParam": 0.5
+    },
+    {
+      "UserId": 2,
+      "Number": "158",
+      "Login": "158",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "SipGroup": "sip.ab",
+      "Port": 10117,
+      "QParam": 0.5
+    }
+  ],
+  "Trunks": [
+    {
+      "TrunkId": 1,
+      "TrunkName": "np_trunk",
+      "Port": 5094,
+      "SipDomain": "pv.ssw2",
+      "SipGroup": "np.group"
+    }
+  ],
+  "UserVar": [
+    {
+      "%%EXT_NUMBER%%": "89134753422",
+      "%%EXT_DOMAIN%%": "yahoo",
+      "%%EXTERNAL_NUMBER_1%%": "3836022345",
+      "%%EXTERNAL_NUMBER_2%%": "3836022346",
+      "%%np_ctx_from_trunk_name%%": "test_np_ctx_from_trunk",
+      "%%np_ctx_from_trunk%%": "PGNvbnRleHQgeG1sbnM6eHM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNlIiB4czpub05hbWVzcGFjZVNjaGVtYUxvY2F0aW9uPSJlY3NzX3JvdXRpbmcueHNkIiBuYW1lPSJ0ZXN0X25wX2N0eF9mcm9tX3RydW5rIiBucD0idGVzdF9ucCIgZGlnaXRtYXA9IigqWzAtOSpdWzAtOSpdLiN8I1swLTkqXVswLTkqXS4jfCojWzAtOSpdWzAtOSpdLiN8MXh4LnwxMHh4LikiPgogIDxydWxlIG5hbWU9InRvX2xvY2FsX251bWJlcnMiPgogICAgPGNvbmRpdGlvbnM+CiAgICAgIDxjZHBuIGRpZ2l0cz0iJSIvPgogICAgPC9jb25kaXRpb25zPgogICAgPHJlc3VsdD4KICAgICAgPGxvY2FsLz4KICAgIDwvcmVzdWx0PgogIDwvcnVsZT4KPC9jb250ZXh0Pg==",
+      "%%np_ctx_to_trunk_name%%": "test_np_ctx_to_trunk",
+      "%%np_ctx_to_trunk%%": "PGNvbnRleHQgeG1sbnM6eHM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNlIiB4czpub05hbWVzcGFjZVNjaGVtYUxvY2F0aW9uPSJlY3NzX3JvdXRpbmcueHNkIiBuYW1lPSJ0ZXN0X25wX2N0eF90b190cnVuayIgbnA9InRlc3RfbnAiIGRpZ2l0bWFwPSIoKlswLTkqXVswLTkqXS4jfCNbMC05Kl1bMC05Kl0uI3wqI1swLTkqXVswLTkqXS4jfDF4eC58MTB4eC4pIj4KICA8cnVsZSBuYW1lPSJydWxlMSI+CiAgICA8Y29uZGl0aW9ucz4KICAgICAgPGZpbmFsIHZhbHVlPSJ0cnVlIi8+CiAgICAgIDxjZHBuIGRpZ2l0cz0iJSIvPgogICAgPC9jb25kaXRpb25zPgogICAgPHJlc3VsdD4KICAgIDxleHRlcm5hbD4KICAgICAgICA8dHJ1bmsgdmFsdWU9Im5wX3RydW5rIi8+CiAgICAgIDwvZXh0ZXJuYWw+CiAgICA8L3Jlc3VsdD4KICA8L3J1bGU+CjwvY29udGV4dD4=",
+      "%%np_ctx_lc_name%%": "test_np_ctx_local_continue",
+      "%%np_ctx_lc%%": "PGNvbnRleHQgeG1sbnM6eHM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNlIiB4czpub05hbWVzcGFjZVNjaGVtYUxvY2F0aW9uPSJlY3NzX3JvdXRpbmcueHNkIiBuYW1lPSJ0ZXN0X25wX2N0eF9sb2NhbF9jb250aW51ZSIgbnA9InRlc3RfbnAiIGRpZ2l0bWFwPSIoKlswLTkqXVswLTkqXS4jfCNbMC05Kl1bMC05Kl0uI3wqI1swLTkqXVswLTkqXS4jfDF4eC58MTB4eC4pIj4KICAgIDxydWxlIG5hbWU9InRvX3RydW5rIj4KICAgICAgPGNvbmRpdGlvbnM+CiAgICAgICAgPHRhZyB2YWx1ZT0ibm90X2xvY2FsIi8+CiAgICAgIDwvY29uZGl0aW9ucz4KICAgICAgPHJlc3VsdD4KICAgICAgICA8bm9fcm91dGUgaXN1cF9jYXVzZT0iMiIvPgogICAgICA8L3Jlc3VsdD4KICAgIDwvcnVsZT4KICAgIDxydWxlIG5hbWU9ImxvY2FsX2NhbGxzIj4KICAgICAgPHJlc3VsdD4KICAgICAgICA8bG9jYWw+CiAgICAgICAgICA8Y29udGludWUgdGFnPSJub3RfbG9jYWwiLz4KICAgICAgICA8L2xvY2FsPgogICAgICA8L3Jlc3VsdD4KICAgIDwvcnVsZT4KPC9jb250ZXh0Pg=="
+    }
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/routing/.xbin/.import-context --xml-base64 %%np_ctx_from_trunk%%",
+    "/domain/%%DEV_DOM%%/routing/.xbin/.import-context --xml-base64 %%np_ctx_to_trunk%%",
+    "/domain/%%DEV_DOM%%/routing/.xbin/.import-context --xml-base64 %%np_ctx_lc%%",
+    "/domain/%%DEV_DOM%%/iface/user-set sip1 %%0.SipGroup%% %%0.Number%%@%%0.SipDomain%% routing.context test_np_ctx_to_trunk",
+    "/domain/%%DEV_DOM%%/iface/user-set sip1 %%1.SipGroup%% %%1.Number%%@%%1.SipDomain%% routing.context test_np_ctx_to_trunk",
+    "/domain/%%DEV_DOM%%/trunk/sip/declare %%np_ctx_from_trunk_name%% %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% %%SSW_IPSET%% static %%IP%% %%Tr.1.Port%% sip-proxy %%EXTER_PORT%%",
+    "/domain/%%DEV_DOM%%/np/declare test_np",
+    "/domain/%%DEV_DOM%%/np/numbers/add test_np {%%EXTERNAL_NUMBER_1%%,%%EXTERNAL_NUMBER_2%%}",
+    "/domain/%%DEV_DOM%%/ss/enable {%%0.Number%%,%%1.Number%%,%%2.Number%%} clip cnip",
+    "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%,%%1.Number%%,%%2.Number%%} clip",
+    "/domain/%%DEV_DOM%%/ss/activate {%%0.Number%%,%%1.Number%%,%%2.Number%%} cnip",
+    "/domain/%%DEV_DOM%%/ss/enable %%2.Number%% chunt",
+    "/domain/%%DEV_DOM%%/properties/set connected_number_mode modified_b",
+    "/domain/%%DEV_DOM%%/ss/activate %%2.Number%% chunt mode = manual, numbers = [%%0.Number%%,%%1.Number%%], cyclic = false, queue_size = 1, max_shift_count = 0, queue_strategy = drop, search_strategy = first, reset_window_start_pos_after_call = true, window_size = 2, window_shift = 0, window_start_pos = 0, window_shift_timeout = 0"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/trunk/sip/remove %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% --force",
+    "/domain/%%DEV_DOM%%/np/remove test_np",
+    "/domain/%%DEV_DOM%%/routing/delete %%np_ctx_from_trunk_name%%",
+    "/domain/%%DEV_DOM%%/routing/delete %%np_ctx_to_trunk_name%%",
+    "/domain/%%DEV_DOM%%/routing/delete %%np_ctx_lc_name%%",
+    "/domain/%%DEV_DOM%%/ss/deactivate {%%0.Number%%,%%1.Number%%,%%2.Number%%} clip",
+    "/domain/%%DEV_DOM%%/ss/deactivate {%%0.Number%%,%%1.Number%%,%%2.Number%%} cnip",
+    "/domain/%%DEV_DOM%%/ss/disable {%%0.Number%%,%%1.Number%%,%%2.Number%%} clip cnip",
+    "/domain/%%DEV_DOM%%/iface/user-set sip1 %%0.SipGroup%% %%0.Number%%@%%0.SipDomain%% routing.context default_routing",
+    "/domain/%%DEV_DOM%%/iface/user-set sip1 %%1.SipGroup%% %%1.Number%%@%%1.SipDomain%% routing.context default_routing",
+    "/domain/%%DEV_DOM%%/properties/set connected_number_mode origin_b",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%2.Number%% chunt",
+    "/domain/%%DEV_DOM%%/ss/disable %%2.Number%% chunt"
+  ],
+  "Tests": [
+    {
+      "Name": "test_np_incoming_call",
+      "Description": "Проверка работы планов нумерации для входящих вызовов. В плане нумерации test_np к одну из внешних номеров привязываем несколько внутренних. При этом первый добавленный номер становится владельцем внешнего номера. Далее делаем вызов из транка на внешний номер. Ожидается, что вызов смаршрутизируется на владельца.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/np/numbers/bind test_np %%EXTERNAL_NUMBER_2%% --alias %%0.Number%%",
+            "/domain/%%DEV_DOM%%/np/numbers/bind test_np %%EXTERNAL_NUMBER_2%% --alias %%1.Number%%",
+            "/domain/%%DEV_DOM%%/iface/user-set sip1 %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% routing.context %%np_ctx_from_trunk_name%%"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAS_RECV_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -set CHK_CGPN %%EXT_NUMBER%% -d 1000",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%EXTERNAL_NUMBER_2%% -set CDPNDOM %%1.SipDomain%% -set CGPN %%EXT_NUMBER%% -set CGPNDOM %%EXT_DOMAIN%% -set CHK_CONNECTED_NUMBER %%0.Number%% -set DISPLAY_NAME \"Test number plan\"",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/np/numbers/unbind test_np %%EXTERNAL_NUMBER_2%% --alias %%0.Number%%",
+            "/domain/%%DEV_DOM%%/np/numbers/unbind test_np %%EXTERNAL_NUMBER_2%% --alias %%1.Number%%",
+            "/domain/%%DEV_DOM%%/iface/user-set sip1 %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% routing.context default_routing"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_np_reject_incoming_call",
+      "Description": "Проверка отбоя вызова в случае, когда внешний номер не имеет связи с внутренними. В плане нумерации test_np к одну из внешних номеров привязываем несколько внутренних. Далее делаем вызов из транка на внешний номер, к которому не привязан ни один из локальных номеров. Ожидается, что вызов будет отбит 404 ответом.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/np/numbers/bind test_np %%EXTERNAL_NUMBER_2%% --alias %%0.Number%%",
+            "/domain/%%DEV_DOM%%/np/numbers/bind test_np %%EXTERNAL_NUMBER_2%% --alias %%1.Number%%",
+            "/domain/%%DEV_DOM%%/iface/user-set sip1 %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% routing.context %%np_ctx_from_trunk_name%%"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "number_plan/uac_recv_404.xml",
+                  "Options": "-m 1 -set CDPN %%EXTERNAL_NUMBER_1%% -set CDPNDOM %%1.SipDomain%% -set CGPN %%EXT_NUMBER%% -set CGPNDOM %%EXT_DOMAIN%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/np/numbers/unbind test_np %%EXTERNAL_NUMBER_2%% --alias %%0.Number%%",
+            "/domain/%%DEV_DOM%%/np/numbers/unbind test_np %%EXTERNAL_NUMBER_2%% --alias %%1.Number%%",
+            "/domain/%%DEV_DOM%%/iface/user-set sip1 %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% routing.context default_routing"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_np_outgoing_call",
+      "Description": "Проверка работы планов нумерации для исходящих вызовов. В плане нумерации test_np к одну из внешних номеров привязываем несколько внутренних. Далее совершаем вызовы с данных номеров на транк. Ожидается, что при выходе на транк cgpn будет изменён на внешний номер.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/np/numbers/bind test_np %%EXTERNAL_NUMBER_1%% --alias %%0.Number%%",
+            "/domain/%%DEV_DOM%%/np/numbers/bind test_np %%EXTERNAL_NUMBER_1%% --alias %%1.Number%%"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "Name": "UAS_RECV_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 2 -set CHK_CGPN %%EXTERNAL_NUMBER_1%% -d 1000",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%EXTERNAL_NUMBER_2%% -set CDPNDOM %%1.SipDomain%% -set DISPLAY_NAME \"Test number plan\"",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%EXTERNAL_NUMBER_2%% -set CDPNDOM %%1.SipDomain%% -set DISPLAY_NAME \"Test number plan\"",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/np/numbers/unbind test_np %%EXTERNAL_NUMBER_1%% --alias %%0.Number%%",
+            "/domain/%%DEV_DOM%%/np/numbers/unbind test_np %%EXTERNAL_NUMBER_1%% --alias %%1.Number%%"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_np_with_local_or_continue_ctx",
+      "Ref": "#107595",
+      "Description": "Проверка работы планов нумерации в случае, когда контекст маршрутизации использует local or continue. Назначаем транку контекст маршрутизации, в котором используется условие local or continue. В плане нумерации test_np к одну из внешних номеров привязываем несколько внутренних. При этом первый добавленный номер становится владельцем внешнего номера. Далее делаем вызов из транка на внешний номер. Ожидается, что вызов смаршрутизируется на владельца. Далее делаем вызов на внешний номер, который не привязан ни к одному их локальных номеров. Ожидается, что вызов отобьётся 404 ответом.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/np/numbers/bind test_np %%EXTERNAL_NUMBER_1%% --alias %%1.Number%%",
+            "/domain/%%DEV_DOM%%/np/numbers/bind test_np %%EXTERNAL_NUMBER_1%% --alias %%0.Number%%",
+            "/domain/%%DEV_DOM%%/iface/user-set sip1 %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% routing.context %%np_ctx_lc_name%%"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_RECV_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -set CHK_CGPN %%EXT_NUMBER%% -d 1000",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%EXTERNAL_NUMBER_1%% -set CDPNDOM %%1.SipDomain%% -set CGPN %%EXT_NUMBER%% -set CGPNDOM %%EXT_DOMAIN%% -set CHK_CONNECTED_NUMBER %%1.Number%% -set DISPLAY_NAME \"Test number plan\"",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                },
+                {
+                  "SourceFile": "number_plan/uac_recv_404.xml",
+                  "Options": "-m 1 -set CDPN %%EXTERNAL_NUMBER_2%% -set CDPNDOM %%1.SipDomain%% -set CGPN %%EXT_NUMBER%% -set CGPNDOM %%EXT_DOMAIN%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/np/numbers/unbind test_np %%EXTERNAL_NUMBER_1%% --alias %%0.Number%%",
+            "/domain/%%DEV_DOM%%/np/numbers/unbind test_np %%EXTERNAL_NUMBER_1%% --alias %%1.Number%%",
+            "/domain/%%DEV_DOM%%/iface/user-set sip1 %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% routing.context default_routing"
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "test_np_chunt_number_as_master",
+      "Ref": "Bug #108079",
+      "Description": "Проверка плана нумерации для входящих вызов в случае, когда мастер номер является групповым. В плане нумерации test_np к одну из внешних номеров привязываем несколько внутренних. При этом первым добавляем групповой номер, чтобы он стал владельцем внешнего номера. Далее делаем вызов из транка на внешний номер. Ожидается, что вызов распределится на все номера группы, а в CGPN будет стоять номер из транка, а не групповой.",
+      "TestProcedure": [
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/np/numbers/bind test_np %%EXTERNAL_NUMBER_1%% --alias %%2.Number%%",
+            "/domain/%%DEV_DOM%%/np/numbers/bind test_np %%EXTERNAL_NUMBER_1%% --alias %%1.Number%%",
+            "/domain/%%DEV_DOM%%/np/numbers/bind test_np %%EXTERNAL_NUMBER_1%% --alias %%0.Number%%",
+            "/domain/%%DEV_DOM%%/iface/user-set sip1 %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% routing.context %%np_ctx_lc_name%%"
+          ]
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "Name": "UAS_RECV_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_send_bye.xml",
+                  "Options": "-m 1 -set CHK_CGPN %%EXT_NUMBER%% -d 1000",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 1,
+              "Name": "UAS_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uas_recv_cancel.xml",
+                  "Options": "-m 1  -set SILENT_CANCEL true",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            },
+            {
+              "Type": "Trunk",
+              "TrunkId": 1,
+              "Name": "UAC_MAKE_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%EXTERNAL_NUMBER_1%% -set CDPNDOM %%1.SipDomain%% -set CGPN %%EXT_NUMBER%% -set CGPNDOM %%EXT_DOMAIN%% -set CHK_CONNECTED_NUMBER %%0.Number%% -set DISPLAY_NAME \"Test number plan\"",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "10s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "SendSSHCommand": [
+            "/domain/%%DEV_DOM%%/np/numbers/unbind test_np %%EXTERNAL_NUMBER_1%% --alias %%2.Number%%",
+            "/domain/%%DEV_DOM%%/iface/user-set sip1 %%Tr.1.SipGroup%% %%Tr.1.TrunkName%% routing.context default_routing"
+          ]
+        }
+      ]
+    }
+  ]
+}

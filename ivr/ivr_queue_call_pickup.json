@@ -1,0 +1,304 @@
+{
+  "TestName": "ivr_call_pickup_test",
+  "AutoTest": true,
+  "Users": [
+    {
+      "UserId": 0,
+      "Number": "110",
+      "Login": "110",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 20000,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    },
+    {
+      "UserId": 1,
+      "Number": "111",
+      "Login": "111",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 20002,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    },
+    {
+      "UserId": 2,
+      "Number": "112",
+      "Login": "112",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 20004,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    },
+    {
+      "UserId": 3,
+      "Number": "113",
+      "Login": "113",
+      "Password": "123",
+      "SipDomain": "%%DEV_DOM%%",
+      "Expires": 90,
+      "Port": 20006,
+      "SipGroup": "sip.ab",
+      "QParam": 0.5
+    }
+  ],
+  "UserVar": [
+    {
+      "%%AGENT0_NAME%%": "Agent0",
+      "%%AGENT1_NAME%%": "Agent1",
+      "%%CLIENT_DNAME%%": "Client",
+      "%%QUEUE_NAME%%": "ivr_queue_pickup",
+      "%%AGENT_PASS%%": "1111"
+    }
+  ],
+  "PreConf": [
+    "/domain/%%DEV_DOM%%/cc/agent/declare %%0.Number%% password = %%AGENT_PASS%%",
+    "/domain/%%DEV_DOM%%/cc/agent/declare %%1.Number%% password = %%AGENT_PASS%%",
+    "/domain/%%DEV_DOM%%/cc/agent/declare %%2.Number%% password = %%AGENT_PASS%%",
+    "/domain/%%DEV_DOM%%/cc/queue/declare %%QUEUE_NAME%% agents = [agent:%%0.Number%%,agent:%%1.Number%%,agent:%%2.Number%%]",
+    "/domain/%%DEV_DOM%%/ss/enable %%0.Number%% cc_agent",
+    "/domain/%%DEV_DOM%%/ss/activate %%0.Number%% cc_agent",
+    "/domain/%%DEV_DOM%%/ss/enable %%1.Number%% cc_agent",
+    "/domain/%%DEV_DOM%%/ss/activate %%1.Number%% cc_agent",
+    "/domain/%%DEV_DOM%%/ss/enable %%2.Number%% cc_agent",
+    "/domain/%%DEV_DOM%%/ss/activate %%2.Number%% cc_agent",
+    "/domain/%%DEV_DOM%%/cc/agent/set %%0.Number%% pickup true ",
+    "/domain/%%DEV_DOM%%/cc/agent/set %%1.Number%% pickup true ",
+    "/domain/%%DEV_DOM%%/cc/agent/set %%0.Number%% display_name %%AGENT0_NAME%%",
+    "/domain/%%DEV_DOM%%/cc/agent/set %%1.Number%% display_name %%AGENT1_NAME%%",
+    "/domain/%%DEV_DOM%%/ss/enable %%3.Number%% clip cnip",
+    "/domain/%%DEV_DOM%%/ss/activate %%3.Number%% clip",
+    "/domain/%%DEV_DOM%%/ss/activate %%3.Number%% cnip",
+    "sleep 10"
+  ],
+  "PostConf": [
+    "/domain/%%DEV_DOM%%/cc/agent/remove %%0.Number%%",
+    "/domain/%%DEV_DOM%%/cc/agent/remove %%1.Number%%",
+    "/domain/%%DEV_DOM%%/cc/agent/remove %%2.Number%%",
+    "/domain/%%DEV_DOM%%/cc/queue/remove %%QUEUE_NAME%%",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%0.Number%% cc_agent",
+    "/domain/%%DEV_DOM%%/ss/disable %%0.Number%% cc_agent",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%1.Number%% cc_agent",
+    "/domain/%%DEV_DOM%%/ss/disable %%1.Number%% cc_agent",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%2.Number%% cc_agent",
+    "/domain/%%DEV_DOM%%/ss/disable %%2.Number%% cc_agent",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%3.Number%% clip",
+    "/domain/%%DEV_DOM%%/ss/deactivate %%3.Number%% cnip",
+    "/domain/%%DEV_DOM%%/ss/disable %%3.Number%% clip cnip"
+  ],
+  "Tests": [
+    {
+      "Name": "queue_direct_call_fail_pickup",
+      "Description": "Проверка того, что агент не может перехватить вызов в случае отключенного pickup",
+      "TestProcedure": [
+        {
+          "ServiceFeature": [
+            {
+              "code": "*160*%%0.Number%%*%%AGENT_PASS%%#",
+              "userId": 0
+            },
+            {
+              "code": "*160*%%1.Number%%*%%AGENT_PASS%%#",
+              "userId": 1
+            },
+            {
+              "code": "*160*%%2.Number%%*%%AGENT_PASS%%#",
+              "userId": 2
+            }
+          ]
+        },
+        {
+          "Sleep": 2
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "BackGround": true,
+              "Name": "UAS_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "ivr/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "BackGround": true,
+              "WriteStat": true,
+              "Name": "UAC_MAKE_DIRECT_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_cancel.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%% -aa -d 14000",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sleep": 5
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 2,
+              "WriteStat": true,
+              "Name": "UAC_FAIL_PICKUP_DIRECT_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "ivr/uac_recv_480.xml",
+                  "Options": "-m 1 -set CDPN *08# -set CDPNDOM %%0.SipDomain%% -aa",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "WaitBackGroundUA": {
+            "timeout": 10
+          }
+        },
+        {
+          "ServiceFeature": [
+            {
+              "code": "#160",
+              "userId": 0
+            },
+            {
+              "code": "#160",
+              "userId": 1
+            },
+            {
+              "code": "#160",
+              "userId": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Name": "queue_direct_call_succ_pickup",
+      "Description": "Проверка перехвата прямого вызова между агентами КЦ",
+      "TestProcedure": [
+        {
+          "ServiceFeature": [
+            {
+              "code": "*160*%%0.Number%%*%%AGENT_PASS%%#",
+              "userId": 0
+            },
+            {
+              "code": "*160*%%1.Number%%*%%AGENT_PASS%%#",
+              "userId": 1
+            },
+            {
+              "code": "*160*%%2.Number%%*%%AGENT_PASS%%#",
+              "userId": 2
+            }
+          ]
+        },
+        {
+          "Sleep": 2
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 0,
+              "WriteStat": true,
+              "BackGround": true,
+              "Name": "UAS_RECV_CANCEL",
+              "Commands": [
+                {
+                  "SourceFile": "ivr/uas_recv_cancel.xml",
+                  "Options": "-m 1",
+                  "SippType": "uas",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            },
+            {
+              "Type": "User",
+              "UserId": 3,
+              "BackGround": true,
+              "WriteStat": true,
+              "Name": "UAC_MAKE_DIRECT_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_recv_bye.xml",
+                  "Options": "-m 1 -set CDPN %%0.Number%% -set CDPNDOM %%0.SipDomain%% -set DISPLAY_NAME %%CLIENT_DNAME%% -aa -set CHK_ALERTING_NAME %%AGENT0_NAME%% -set CHK_CONNECTED_NAME %%AGENT1_NAME%% -set CHK_ALERTING_NUMBER %%0.Number%% -set CHK_CONNECTED_NUMBER %%1.Number%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sleep": 5
+        },
+        {
+          "StartUA": [
+            {
+              "Type": "User",
+              "UserId": 1,
+              "WriteStat": true,
+              "Name": "UAC_PICKUP_DIRECT_CALL",
+              "Commands": [
+                {
+                  "SourceFile": "simple_ua/uac_send_bye.xml",
+                  "Options": "-m 1 -set CDPN *08# -set CDPNDOM %%0.SipDomain%% -set CHK_CONNECTED_NUMBER %%3.Number%% -set CHK_CONNECTED_NAME %%CLIENT_DNAME%%",
+                  "SippType": "uac",
+                  "NeedAuth": true,
+                  "Timeout": "40s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "WaitBackGroundUA": {
+            "timeout": 10
+          }
+        },
+        {
+          "ServiceFeature": [
+            {
+              "code": "#160",
+              "userId": 0
+            },
+            {
+              "code": "#160",
+              "userId": 1
+            },
+            {
+              "code": "#160",
+              "userId": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
